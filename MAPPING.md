@@ -59,7 +59,7 @@ which is how iTerm2 treats sparse dynamic profiles.
 | `Close Sessions On End` false | `wait-after-command = true` |
 | `Session Close Undo Timeout` | `undo-timeout` |
 | `Answerback String` | `enquiry-response` |
-| `Cursor Type` | `cursor-style`, plus `shell-integration-features = no-cursor` so Ghostty does not force a bar cursor at prompts |
+| `Cursor Type` | `cursor-style`, `shell-integration-features = no-cursor`; underline cursors also get `adjust-cursor-thickness = 1` to better match iTerm2 |
 | `Blinking Cursor` | `cursor-style-blink` |
 | `Minimum Contrast` | `minimum-contrast`, scaled from 0–1 to 1–21 |
 | `Option Key Sends`, `Right Option Key Sends` | `macos-option-as-alt` |

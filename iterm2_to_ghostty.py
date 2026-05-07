@@ -524,8 +524,14 @@ def convert_terminal(profile: dict[str, Any], conv: Conversion) -> None:
 
 
 def convert_cursor_and_input(profile: dict[str, Any], conv: Conversion) -> None:
+    cursor_type = profile.get("Cursor Type")
     if "Cursor Type" in profile:
-        add_line(conv.config, "cursor-style", CURSOR_TYPES.get(profile.get("Cursor Type"), "block"))
+        add_line(conv.config, "cursor-style", CURSOR_TYPES.get(cursor_type, "block"))
+        if cursor_type == 0:
+            # iTerm2 draws its underline cursor a little heavier than Ghostty's
+            # default underline cursor. One pixel is the closest match in the
+            # screenshots without making the cursor look like a block.
+            add_line(conv.config, "adjust-cursor-thickness", 1)
     if "Blinking Cursor" in profile:
         add_line(conv.config, "cursor-style-blink", bool_text(profile.get("Blinking Cursor")))
     if isinstance(profile.get("Cursor Boost"), (int, float)):
