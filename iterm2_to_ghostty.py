@@ -111,8 +111,12 @@ SPECIAL_KEYS = {
 
 UNSUPPORTED_PROFILE_KEYS = {
     "Triggers": "Ghostty has no direct trigger/coprocess equivalent.",
-    "Smart Selection Rules": "Ghostty supports selection word boundaries but not iTerm2 smart-selection actions.",
-    "Semantic History": "Ghostty has URL/file link support but no direct semantic-history action model.",
+    "Smart Selection Rules": (
+        "Ghostty supports selection word boundaries but not iTerm2 smart-selection actions."
+    ),
+    "Semantic History": (
+        "Ghostty has URL/file link support but no direct semantic-history action model."
+    ),
     "Bound Hosts": "Ghostty has no automatic profile switching equivalent.",
     "Badge Text": "Ghostty has no terminal badge overlay equivalent.",
     "Show Status Bar": "Ghostty has no iTerm2 status bar equivalent.",
@@ -215,12 +219,21 @@ def all_profiles(prefs: dict[str, Any], dynamic_dir: Path | None) -> list[dict[s
     return profiles
 
 
-def select_profile(profiles: list[dict[str, Any]], prefs: dict[str, Any], selector: str | None) -> dict[str, Any]:
+def select_profile(
+    profiles: list[dict[str, Any]],
+    prefs: dict[str, Any],
+    selector: str | None,
+) -> dict[str, Any]:
     if not profiles:
         raise SystemExit("No iTerm2 profiles found in preferences or dynamic profiles.")
     if selector:
         lower = selector.lower()
-        matches = [p for p in profiles if str(p.get("Name", "")).lower() == lower or str(p.get("Guid", "")).lower() == lower]
+        matches = [
+            p
+            for p in profiles
+            if str(p.get("Name", "")).lower() == lower
+            or str(p.get("Guid", "")).lower() == lower
+        ]
         if not matches:
             names = ", ".join(sorted(str(p.get("Name", "<unnamed>")) for p in profiles))
             raise SystemExit(f"Profile {selector!r} not found. Available profiles: {names}")
@@ -314,7 +327,10 @@ def convert_font(profile: dict[str, Any], conv: Conversion) -> None:
         non_ascii = parse_font(profile.get("Non Ascii Font"))
         if non_ascii:
             add_line(conv.config, "font-family", non_ascii[0])
-            conv.warnings.append("Added iTerm2 Non Ascii Font as a Ghostty fallback font-family; Ghostty cannot target only non-ASCII with this setting.")
+            conv.warnings.append(
+                "Added iTerm2 Non Ascii Font as a Ghostty fallback font-family; "
+                "Ghostty cannot target only non-ASCII with this setting."
+            )
 
     if profile.get("ASCII Ligatures") is False or profile.get("Non-ASCII Ligatures") is False:
         add_line(conv.config, "font-feature", "-calt, -liga, -dlig")
@@ -344,13 +360,15 @@ def convert_window(profile: dict[str, Any], conv: Conversion) -> None:
     transparency = profile.get("Transparency")
     use_transparency = profile.get("Initial Use Transparency", True)
     if isinstance(transparency, (int, float)) and use_transparency is not False:
-        add_line(conv.config, "background-opacity", round(max(0, min(1, 1 - float(transparency))), 3))
+        opacity = round(max(0, min(1, 1 - float(transparency))), 3)
+        add_line(conv.config, "background-opacity", opacity)
         if profile.get("Only The Default BG Color Uses Transparency") is False:
             add_line(conv.config, "background-opacity-cells", "true")
 
     if profile.get("Blur"):
         radius = profile.get("Blur Radius")
-        add_line(conv.config, "background-blur", int(radius) if isinstance(radius, (int, float)) and radius > 0 else "true")
+        blur = int(radius) if isinstance(radius, (int, float)) and radius > 0 else "true"
+        add_line(conv.config, "background-blur", blur)
 
     image = profile.get("Background Image Location")
     if image:
@@ -364,7 +382,8 @@ def convert_window(profile: dict[str, Any], conv: Conversion) -> None:
             add_line(conv.config, "background-image-repeat", "true")
         blend = profile.get("Blend")
         if isinstance(blend, (int, float)):
-            add_line(conv.config, "background-image-opacity", round(max(0, min(1, 1 - float(blend))), 3))
+            image_opacity = round(max(0, min(1, 1 - float(blend))), 3)
+            add_line(conv.config, "background-image-opacity", image_opacity)
 
     window_type = profile.get("Window Type")
     if window_type in (1, "Fullscreen"):
@@ -392,12 +411,18 @@ def convert_terminal(profile: dict[str, Any], conv: Conversion) -> None:
 
     scrollback = profile.get("Scrollback Lines")
     if profile.get("Unlimited Scrollback"):
-        conv.warnings.append("iTerm2 unlimited scrollback cannot be represented exactly; wrote a large Ghostty scrollback limit.")
+        conv.warnings.append(
+            "iTerm2 unlimited scrollback cannot be represented exactly; "
+            "wrote a large Ghostty scrollback limit."
+        )
         add_line(conv.config, "scrollback-limit", 4294967295)
     elif isinstance(scrollback, int) and scrollback >= 0:
         # Ghostty uses bytes, not lines. Estimate 160 bytes/line as a practical default.
         add_line(conv.config, "scrollback-limit", max(scrollback * 160, 1048576))
-        conv.warnings.append("Ghostty scrollback-limit is bytes, while iTerm2 stores lines; used an estimated 160 bytes per line.")
+        conv.warnings.append(
+            "Ghostty scrollback-limit is bytes, while iTerm2 stores lines; "
+            "used an estimated 160 bytes per line."
+        )
 
     if "Mouse Reporting" in profile:
         add_line(conv.config, "mouse-reporting", bool_text(profile.get("Mouse Reporting")))
@@ -409,7 +434,8 @@ def convert_terminal(profile: dict[str, Any], conv: Conversion) -> None:
         add_line(conv.config, "bell-features", "system,attention,title")
 
     if "Prompt Before Closing 2" in profile:
-        add_line(conv.config, "confirm-close-surface", bool_text(profile.get("Prompt Before Closing 2")))
+        confirm_close = bool_text(profile.get("Prompt Before Closing 2"))
+        add_line(conv.config, "confirm-close-surface", confirm_close)
     if profile.get("Close Sessions On End") is False:
         add_line(conv.config, "wait-after-command", "true")
     if isinstance(profile.get("Session Close Undo Timeout"), (int, float)):
@@ -428,9 +454,10 @@ def convert_cursor_and_input(profile: dict[str, Any], conv: Conversion) -> None:
     if isinstance(profile.get("Cursor Boost"), (int, float)):
         # iTerm2 boosts cursor contrast/visibility; Ghostty has opacity only. Keep fully visible.
         add_line(conv.config, "cursor-opacity", 1)
-    if isinstance(profile.get("Minimum Contrast"), (int, float)) and profile.get("Minimum Contrast") > 0:
+    minimum_contrast = profile.get("Minimum Contrast")
+    if isinstance(minimum_contrast, (int, float)) and minimum_contrast > 0:
         # iTerm2 stores 0...1, Ghostty stores WCAG contrast ratio 1...21.
-        add_line(conv.config, "minimum-contrast", round(1 + float(profile.get("Minimum Contrast")) * 20, 2))
+        add_line(conv.config, "minimum-contrast", round(1 + float(minimum_contrast) * 20, 2))
 
     left_alt = profile.get("Option Key Sends")
     right_alt = profile.get("Right Option Key Sends")
@@ -442,7 +469,11 @@ def convert_cursor_and_input(profile: dict[str, Any], conv: Conversion) -> None:
         add_line(conv.config, "macos-option-as-alt", "right")
 
     if profile.get("Use libtickit protocol"):
-        conv.warnings.append("iTerm2 CSI-u/libtickit key protocol is not a one-to-one Ghostty setting; Ghostty enables modern keyboard protocols through TERM/terminal behavior.")
+        conv.warnings.append(
+            "iTerm2 CSI-u/libtickit key protocol is not a one-to-one Ghostty "
+            "setting; Ghostty enables modern keyboard protocols through "
+            "TERM/terminal behavior."
+        )
 
 
 def convert_global_prefs(prefs: dict[str, Any], conv: Conversion) -> None:
@@ -452,7 +483,8 @@ def convert_global_prefs(prefs: dict[str, Any], conv: Conversion) -> None:
     if prefs.get("HideScrollbar") is True:
         add_line(conv.config, "scrollbar", "never")
     if prefs.get("QuitWhenAllWindowsClosed") is not None:
-        add_line(conv.config, "quit-after-last-window-closed", bool_text(prefs.get("QuitWhenAllWindowsClosed")))
+        quit_after_last_window = bool_text(prefs.get("QuitWhenAllWindowsClosed"))
+        add_line(conv.config, "quit-after-last-window-closed", quit_after_last_window)
 
 
 def key_trigger(encoded: str) -> str | None:
@@ -515,9 +547,15 @@ def convert_keymap(profile: dict[str, Any], conv: Conversion) -> None:
         else:
             skipped += 1
     if converted:
-        conv.warnings.append(f"Converted {converted} simple iTerm2 key mappings (send escape/text/ignore) to Ghostty keybind entries.")
+        conv.warnings.append(
+            f"Converted {converted} simple iTerm2 key mappings "
+            "(send escape/text/ignore) to Ghostty keybind entries."
+        )
     if skipped:
-        conv.unsupported.append(f"Skipped {skipped} complex iTerm2 key mappings; inspect the iTerm2 Keyboard Map manually.")
+        conv.unsupported.append(
+            f"Skipped {skipped} complex iTerm2 key mappings; "
+            "inspect the iTerm2 Keyboard Map manually."
+        )
 
 
 def convert_profile(profile: dict[str, Any], prefs: dict[str, Any], color_mode: str) -> Conversion:
@@ -569,7 +607,13 @@ def safe_name(name: str) -> str:
     return safe or "profile"
 
 
-def write_outputs(conv: Conversion, out: Path, profile_name: str, dry_run: bool, backup: bool) -> None:
+def write_outputs(
+    conv: Conversion,
+    out: Path,
+    profile_name: str,
+    dry_run: bool,
+    backup: bool,
+) -> None:
     config_text = "\n".join(conv.config)
     if dry_run:
         print(config_text)
@@ -582,7 +626,11 @@ def write_outputs(conv: Conversion, out: Path, profile_name: str, dry_run: bool,
 
     out.parent.mkdir(parents=True, exist_ok=True)
     if backup and out.exists():
-        backup_path = out.with_suffix(out.suffix + ".bak") if out.suffix else Path(str(out) + ".bak")
+        backup_path = (
+            out.with_suffix(out.suffix + ".bak")
+            if out.suffix
+            else Path(str(out) + ".bak")
+        )
         shutil.copy2(out, backup_path)
         print(f"Backed up existing Ghostty config to {backup_path}")
     out.write_text(config_text, encoding="utf-8")
@@ -603,15 +651,50 @@ def write_outputs(conv: Conversion, out: Path, profile_name: str, dry_run: bool,
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Convert iTerm2 profile preferences to Ghostty config")
-    parser.add_argument("--iterm-plist", type=Path, help="Path to com.googlecode.iterm2.plist or exported plist")
-    parser.add_argument("--dynamic-profiles-dir", type=Path, help="Path to iTerm2 DynamicProfiles directory")
-    parser.add_argument("--profile", help="iTerm2 profile name or Guid. Defaults to the iTerm2 default profile")
-    parser.add_argument("--list-profiles", action="store_true", help="List discovered iTerm2 profiles and exit")
-    parser.add_argument("--color-mode", choices=["auto", "single", "light", "dark"], default="auto", help="How to handle iTerm2 light/dark color variants")
-    parser.add_argument("--output", type=Path, default=DEFAULT_GHOSTTY_DIR / "config", help="Ghostty config output path")
-    parser.add_argument("--dry-run", action="store_true", help="Print generated config instead of writing files")
-    parser.add_argument("--no-backup", action="store_true", help="Do not back up an existing output file")
+    parser = argparse.ArgumentParser(
+        description="Convert iTerm2 profile preferences to Ghostty config"
+    )
+    parser.add_argument(
+        "--iterm-plist",
+        type=Path,
+        help="Path to com.googlecode.iterm2.plist or exported plist",
+    )
+    parser.add_argument(
+        "--dynamic-profiles-dir",
+        type=Path,
+        help="Path to iTerm2 DynamicProfiles directory",
+    )
+    parser.add_argument(
+        "--profile",
+        help="iTerm2 profile name or Guid. Defaults to the iTerm2 default profile",
+    )
+    parser.add_argument(
+        "--list-profiles",
+        action="store_true",
+        help="List discovered iTerm2 profiles and exit",
+    )
+    parser.add_argument(
+        "--color-mode",
+        choices=["auto", "single", "light", "dark"],
+        default="auto",
+        help="How to handle iTerm2 light/dark color variants",
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=DEFAULT_GHOSTTY_DIR / "config",
+        help="Ghostty config output path",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Print generated config instead of writing files",
+    )
+    parser.add_argument(
+        "--no-backup",
+        action="store_true",
+        help="Do not back up an existing output file",
+    )
     return parser.parse_args(argv)
 
 
@@ -630,7 +713,13 @@ def main(argv: list[str]) -> int:
 
     profile = select_profile(profiles, prefs, args.profile)
     conv = convert_profile(profile, prefs, args.color_mode)
-    write_outputs(conv, args.output, str(profile.get("Name", "profile")), args.dry_run, not args.no_backup)
+    write_outputs(
+        conv,
+        args.output,
+        str(profile.get("Name", "profile")),
+        args.dry_run,
+        not args.no_backup,
+    )
     return 0
 
 

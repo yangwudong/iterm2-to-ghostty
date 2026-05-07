@@ -1,26 +1,27 @@
-# iTerm2 → Ghostty mapping notes
+# Mapping notes
 
-Research sources used:
+These are the iTerm2 settings the script currently knows about. The source of
+truth for Ghostty options is the Ghostty config reference. For iTerm2 plist keys,
+the most useful reference was iTerm2's Python API profile schema
+(`api/library/python/iterm2/gen_profile.py`), because it names the actual plist
+keys.
 
-- Ghostty configuration reference: `https://ghostty.org/docs/config/reference`
-- iTerm2 profile preference docs: General, Text, Colors, Terminal, Window, Keys
-- iTerm2 Dynamic Profiles docs
-- iTerm2 Python API profile schema (`api/library/python/iterm2/gen_profile.py`), which exposes actual plist key names.
+## Inputs
 
-## Files read by the converter
-
-- Main iTerm2 preferences: `~/Library/Preferences/com.googlecode.iterm2.plist`
-- Fallback main preferences export: `defaults export com.googlecode.iterm2 -`
+- Main preferences: `~/Library/Preferences/com.googlecode.iterm2.plist`
+- Fallback when the plist is not present: `defaults export com.googlecode.iterm2 -`
 - Dynamic profiles: `~/Library/Application Support/iTerm2/DynamicProfiles/*`
 
-Dynamic profiles are merged over base preference profiles with the same `Guid`, matching iTerm2's overlay behavior.
+Dynamic profiles with a matching `Guid` are merged on top of the base profile,
+which is how iTerm2 treats sparse dynamic profiles.
 
-## Files written by the converter
+## Outputs
 
-- Ghostty config: `~/.config/ghostty/config` by default
-- Ghostty themes: `~/.config/ghostty/themes/iterm2-<profile>-light` and `...-dark` when iTerm2 separate light/dark colors are enabled.
+- Ghostty config: `~/.config/ghostty/config`
+- Optional Ghostty themes: `~/.config/ghostty/themes/iterm2-<profile>-light`
+  and `iterm2-<profile>-dark`
 
-## Direct/near-direct mappings
+## Mapped settings
 
 | iTerm2 plist key | Ghostty key |
 |---|---|
@@ -34,16 +35,16 @@ Dynamic profiles are merged over base preference profiles with the same `Guid`, 
 | `Ansi 0 Color` … `Ansi 15 Color` | `palette = 0=...` … `15=...` |
 | `Normal Font` | `font-family`, `font-size` |
 | `Non Ascii Font` | extra `font-family` fallback |
-| `ASCII Ligatures` / `Non-ASCII Ligatures` false | `font-feature = "-calt, -liga, -dlig"` |
+| `ASCII Ligatures` / `Non-ASCII Ligatures` false | `font-feature` disabling common ligature features |
 | `Use Bold Font` false | `font-style-bold = false` |
 | `Use Italic Font` false | `font-style-italic = false` |
-| `Horizontal Spacing` / `Vertical Spacing` | `adjust-cell-width` / `adjust-cell-height` percentage adjustment |
+| `Horizontal Spacing` / `Vertical Spacing` | `adjust-cell-width` / `adjust-cell-height` |
 | `Columns` / `Rows` | `window-width` / `window-height` |
 | `Transparency` | `background-opacity = 1 - transparency` |
 | `Only The Default BG Color Uses Transparency` false | `background-opacity-cells = true` |
 | `Blur` / `Blur Radius` | `background-blur` |
 | `Background Image Location` | `background-image` |
-| `Background Image Mode` | `background-image-fit`; tiled mode also sets `background-image-repeat = true` |
+| `Background Image Mode` | `background-image-fit`; tile also sets repeat |
 | `Blend` | approximate `background-image-opacity` |
 | `Window Type` fullscreen | `fullscreen = true` |
 | `Use Custom Window Title` / `Custom Window Title` | `title` |
@@ -60,11 +61,11 @@ Dynamic profiles are merged over base preference profiles with the same `Guid`, 
 | `Answerback String` | `enquiry-response` |
 | `Cursor Type` | `cursor-style` |
 | `Blinking Cursor` | `cursor-style-blink` |
-| `Minimum Contrast` | `minimum-contrast` scaled from 0–1 to 1–21 |
+| `Minimum Contrast` | `minimum-contrast`, scaled from 0–1 to 1–21 |
 | `Option Key Sends`, `Right Option Key Sends` | `macos-option-as-alt` |
 | simple `Keyboard Map` entries | `keybind` |
 
-## Global preferences mapped when present
+## Global preferences
 
 | iTerm2 preference | Ghostty key |
 |---|---|
@@ -72,6 +73,10 @@ Dynamic profiles are merged over base preference profiles with the same `Guid`, 
 | `HideScrollbar` | `scrollbar = never` |
 | `QuitWhenAllWindowsClosed` | `quit-after-last-window-closed` |
 
-## Not automatically representable
+## Known gaps
 
-The generated config comments list any encountered keys that are not converted. Common examples: iTerm2 triggers/coprocesses, smart selection actions, semantic history, automatic profile switching, badges, status bar, legacy character encodings, unicode normalization, and some complex key actions.
+The script does not try to fake iTerm2-only features. It reports them in the
+generated config instead. Common examples are triggers/coprocesses, smart
+selection actions, semantic history, automatic profile switching, badges, the
+status bar, legacy character encodings, unicode normalization, and complex key
+actions.

@@ -29,9 +29,12 @@ class ConversionTests(unittest.TestCase):
         }
         with tempfile.TemporaryDirectory() as tmp:
             dynamic_dir = Path(tmp)
-            (dynamic_dir / "profile.plist").write_bytes(
-                plistlib.dumps({"Profiles": [{"Name": "Overlay", "Guid": "G", "Columns": 100, "Rows": 30}]})
-            )
+            dynamic_profile = {
+                "Profiles": [
+                    {"Name": "Overlay", "Guid": "G", "Columns": 100, "Rows": 30}
+                ]
+            }
+            (dynamic_dir / "profile.plist").write_bytes(plistlib.dumps(dynamic_profile))
             profiles = all_profiles(prefs, dynamic_dir)
 
         self.assertEqual(len(profiles), 1)

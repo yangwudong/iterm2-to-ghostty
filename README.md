@@ -1,8 +1,17 @@
-# iTerm2 to Ghostty converter
+# iterm2-to-ghostty
 
-`iterm2_to_ghostty.py` converts an iTerm2 profile plist into a Ghostty config. It focuses on settings Ghostty can represent: colors, ANSI palette, font, size, opacity/blur, background image, cursor, shell/working directory, scrollback, mouse reporting, bell behavior, close behavior, selected global preferences, and simple key mappings.
+A small Python script for moving an iTerm2 profile into Ghostty.
 
-## Usage
+It reads iTerm2's plist files, picks a profile, and writes a Ghostty config. The
+conversion covers the stuff that maps reasonably well: colors, ANSI palette,
+font, window size, opacity/blur, background images, cursor, command/working
+directory, scrollback, mouse reporting, bell settings, close behavior, a few
+global preferences, and simple key bindings.
+
+Some iTerm2 features do not exist in Ghostty. Those are left as comments in the
+output so you can decide what to do with them.
+
+## Quick start
 
 ```bash
 ./iterm2_to_ghostty.py --list-profiles
@@ -10,35 +19,33 @@
 ./iterm2_to_ghostty.py --profile Default
 ```
 
-By default it reads:
+Default input paths:
 
 - `~/Library/Preferences/com.googlecode.iterm2.plist`
 - `~/Library/Application Support/iTerm2/DynamicProfiles/*`
 
-and writes:
+Default output paths:
 
 - `~/.config/ghostty/config`
-- `~/.config/ghostty/themes/iterm2-*-light` / `iterm2-*-dark` when the iTerm2 profile uses separate light/dark colors.
+- `~/.config/ghostty/themes/iterm2-*-light`
+- `~/.config/ghostty/themes/iterm2-*-dark`
 
-Existing Ghostty config files are backed up to `config.bak` unless `--no-backup` is passed.
+If `~/.config/ghostty/config` already exists, the script writes a `config.bak`
+copy first. Use `--no-backup` if you do not want that.
 
-## Useful options
+## Options
 
-```bash
---iterm-plist PATH          Read an exported or copied iTerm2 plist
---dynamic-profiles-dir DIR  Read dynamic profiles from a custom directory
---profile NAME_OR_GUID      Choose an iTerm2 profile
---color-mode auto|single|light|dark
---output PATH               Write a custom Ghostty config path
---dry-run                   Print instead of writing files
---no-backup                 Do not back up an existing output file
+```text
+--iterm-plist PATH          read a copied/exported iTerm2 plist
+--dynamic-profiles-dir DIR  read dynamic profiles from another directory
+--profile NAME_OR_GUID      choose a profile; defaults to iTerm2's default
+--color-mode MODE           auto, single, light, or dark
+--output PATH               write a different Ghostty config file
+--dry-run                   print the result instead of writing files
+--no-backup                 skip the config.bak backup
 ```
 
-## Notes
-
-Some iTerm2 features have no direct Ghostty equivalent. The generated config includes comments for skipped or approximate settings so you can review them manually. Simple iTerm2 key mappings for “send escape sequence”, “send text”, and “ignore” are converted to Ghostty `keybind` entries; more complex actions are reported as skipped.
-
-## Development
+## Tests
 
 ```bash
 python3 -m unittest discover -s tests

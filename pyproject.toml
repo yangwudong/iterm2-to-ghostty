@@ -1,0 +1,11 @@
+[project]
+name = "iterm2-to-ghostty"
+version = "0.1.0"
+description = "Convert iTerm2 profile settings to Ghostty config"
+requires-python = ">=3.10"
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
