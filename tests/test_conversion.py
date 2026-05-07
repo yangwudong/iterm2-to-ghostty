@@ -7,7 +7,13 @@ import plistlib
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from iterm2_to_ghostty import all_profiles, convert_profile, key_trigger, load_iterm_preferences
+from iterm2_to_ghostty import (
+    all_profiles,
+    convert_profile,
+    infer_job_title,
+    key_trigger,
+    load_iterm_preferences,
+)
 
 
 class ConversionTests(unittest.TestCase):
@@ -74,6 +80,15 @@ class ConversionTests(unittest.TestCase):
 
     def test_shifted_printable_key_trigger_uses_base_key(self):
         self.assertEqual(key_trigger("0x5e-0x60000"), "ctrl+shift+6")
+
+    def test_job_title_component_sets_static_shell_title(self):
+        profile = {"Name": "P", "Guid": "G", "Title Components": 2}
+        text = "\n".join(convert_profile(profile, {}, "single").config)
+        self.assertIn("title = -", text)
+
+    def test_custom_command_job_title_uses_command_name(self):
+        profile = {"Custom Command": "Yes", "Command": "/usr/bin/top -u"}
+        self.assertEqual(infer_job_title(profile), "top")
 
     def test_native_iterm_titlebar_maps_to_native_ghostty_titlebar(self):
         prefs = {

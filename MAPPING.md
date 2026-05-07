@@ -64,6 +64,7 @@ which is how iTerm2 treats sparse dynamic profiles.
 | `Minimum Contrast` | `minimum-contrast`, scaled from 0–1 to 1–21 |
 | `Option Key Sends`, `Right Option Key Sends` | `macos-option-as-alt` |
 | simple `Keyboard Map` entries | `keybind` |
+| `Title Components` set to job only | static `title` based on the shell or custom command |
 | `Sync Title` false | `shell-integration-features = no-title` |
 
 ## Global preferences

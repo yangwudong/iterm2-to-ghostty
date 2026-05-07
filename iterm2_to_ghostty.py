@@ -14,6 +14,7 @@ import json
 import os
 import plistlib
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -351,6 +352,28 @@ def convert_font(profile: dict[str, Any], conv: Conversion) -> None:
         add_line(conv.config, "adjust-cell-height", f"{(v_spacing - 1) * 100:.2f}%")
 
 
+def infer_job_title(profile: dict[str, Any]) -> str | None:
+    """Best-effort title for iTerm2's JOB title component.
+
+    iTerm2's default profile often uses only the JOB title component, which
+    shows a login shell as "-zsh". Ghostty's native titlebar otherwise shows
+    the working directory, so a static approximation is closer visually.
+    """
+    if profile.get("Custom Command") == "Yes" and profile.get("Command"):
+        try:
+            parts = shlex.split(str(profile["Command"]))
+        except ValueError:
+            parts = str(profile["Command"]).split()
+        if parts:
+            return Path(parts[0]).name
+        return None
+
+    shell = os.environ.get("SHELL")
+    if shell:
+        return f"-{Path(shell).name}"
+    return None
+
+
 def convert_window(profile: dict[str, Any], conv: Conversion) -> None:
     cols, rows = profile.get("Columns"), profile.get("Rows")
     if isinstance(cols, int) and isinstance(rows, int):
@@ -393,6 +416,8 @@ def convert_window(profile: dict[str, Any], conv: Conversion) -> None:
         add_line(conv.config, "title", profile.get("Custom Window Title"))
     elif profile.get("Sync Title") and profile.get("Name"):
         add_line(conv.config, "title", profile.get("Name"))
+    elif profile.get("Title Components") == 2:
+        add_line(conv.config, "title", infer_job_title(profile))
 
 
 def convert_terminal(profile: dict[str, Any], conv: Conversion) -> None:
@@ -439,7 +464,6 @@ def convert_terminal(profile: dict[str, Any], conv: Conversion) -> None:
     if profile.get("Close Sessions On End") is False:
         add_line(conv.config, "wait-after-command", "true")
     if isinstance(profile.get("Session Close Undo Timeout"), (int, float)):
-        add_line(conv.config, "window-save-state", "default")
         add_line(conv.config, "undo-timeout", f"{profile.get('Session Close Undo Timeout')}s")
 
     if profile.get("Answerback String"):
