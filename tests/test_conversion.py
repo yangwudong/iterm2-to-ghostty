@@ -75,6 +75,21 @@ class ConversionTests(unittest.TestCase):
     def test_shifted_printable_key_trigger_uses_base_key(self):
         self.assertEqual(key_trigger("0x5e-0x60000"), "ctrl+shift+6")
 
+    def test_native_iterm_titlebar_maps_to_native_ghostty_titlebar(self):
+        prefs = {
+            "NSScrollViewShouldScrollUnderTitlebar": False,
+            "EnableProxyIcon": False,
+        }
+        text = "\n".join(convert_profile({"Name": "P", "Guid": "G"}, prefs, "single").config)
+        self.assertIn("macos-titlebar-style = native", text)
+        self.assertIn("window-theme = light", text)
+        self.assertIn("macos-titlebar-proxy-icon = hidden", text)
+
+    def test_unsynced_iterm_title_disables_ghostty_shell_title(self):
+        profile = {"Name": "P", "Guid": "G", "Sync Title": False}
+        text = "\n".join(convert_profile(profile, {}, "single").config)
+        self.assertIn("shell-integration-features = no-title", text)
+
     def test_load_iterm_preferences_from_explicit_path(self):
         prefs = {"New Bookmarks": []}
         with tempfile.TemporaryDirectory() as tmp:

@@ -64,6 +64,7 @@ which is how iTerm2 treats sparse dynamic profiles.
 | `Minimum Contrast` | `minimum-contrast`, scaled from 0–1 to 1–21 |
 | `Option Key Sends`, `Right Option Key Sends` | `macos-option-as-alt` |
 | simple `Keyboard Map` entries | `keybind` |
+| `Sync Title` false | `shell-integration-features = no-title` |
 
 ## Global preferences
 
@@ -72,6 +73,8 @@ which is how iTerm2 treats sparse dynamic profiles.
 | `Copy Selection` | `copy-on-select` |
 | `HideScrollbar` | `scrollbar = never` |
 | `QuitWhenAllWindowsClosed` | `quit-after-last-window-closed` |
+| `NSScrollViewShouldScrollUnderTitlebar` false | `macos-titlebar-style = native`, `window-theme = light` |
+| `EnableProxyIcon` false | `macos-titlebar-proxy-icon = hidden` |
 
 ## Known gaps
 

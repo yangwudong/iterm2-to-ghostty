@@ -475,6 +475,12 @@ def convert_cursor_and_input(profile: dict[str, Any], conv: Conversion) -> None:
             "TERM/terminal behavior."
         )
 
+    # iTerm2's default title in a plain shell is usually the process name
+    # (for example, "-zsh"). Ghostty's shell integration otherwise changes it
+    # to the working directory, which is a visible mismatch.
+    if profile.get("Sync Title") is False and not profile.get("Use Custom Window Title"):
+        add_line(conv.config, "shell-integration-features", "no-title")
+
 
 def convert_global_prefs(prefs: dict[str, Any], conv: Conversion) -> None:
     copy_on_select = prefs.get("Copy Selection")
@@ -485,6 +491,16 @@ def convert_global_prefs(prefs: dict[str, Any], conv: Conversion) -> None:
     if prefs.get("QuitWhenAllWindowsClosed") is not None:
         quit_after_last_window = bool_text(prefs.get("QuitWhenAllWindowsClosed"))
         add_line(conv.config, "quit-after-last-window-closed", quit_after_last_window)
+
+    # iTerm2's normal macOS window has a separate native titlebar. Ghostty's
+    # default on macOS is transparent, which makes a dark terminal look quite
+    # different. If iTerm2 is not drawing under the titlebar, prefer the native
+    # Ghostty titlebar and let it stay light like iTerm2.
+    if prefs.get("NSScrollViewShouldScrollUnderTitlebar") is False:
+        add_line(conv.config, "macos-titlebar-style", "native")
+        add_line(conv.config, "window-theme", "light")
+    if prefs.get("EnableProxyIcon") is False:
+        add_line(conv.config, "macos-titlebar-proxy-icon", "hidden")
 
 
 def key_trigger(encoded: str) -> str | None:
