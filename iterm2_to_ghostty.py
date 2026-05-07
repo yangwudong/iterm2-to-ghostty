@@ -39,6 +39,7 @@ BASE_COLOR_KEYS = {
 LIGHT_DARK_SUFFIXES = {"light": " (Light)", "dark": " (Dark)"}
 
 CURSOR_TYPES = {0: "underline", 1: "bar", 2: "block"}
+TITLE_COMPONENT_JOB = 1 << 1
 OPTION_SENDS_ALT_VALUES = {1, 2, "1", "2"}  # META or ESC both aim at terminal alt/meta behavior.
 
 # NSEvent modifier flags as stored in iTerm2 key map strings.
@@ -416,7 +417,7 @@ def convert_window(profile: dict[str, Any], conv: Conversion) -> None:
         add_line(conv.config, "title", profile.get("Custom Window Title"))
     elif profile.get("Sync Title") and profile.get("Name"):
         add_line(conv.config, "title", profile.get("Name"))
-    elif profile.get("Title Components") == 2:
+    elif profile.get("Title Components") == TITLE_COMPONENT_JOB:
         add_line(conv.config, "title", infer_job_title(profile))
 
 

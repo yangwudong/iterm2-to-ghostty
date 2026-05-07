@@ -84,7 +84,7 @@ class ConversionTests(unittest.TestCase):
     def test_job_title_component_sets_static_shell_title(self):
         profile = {"Name": "P", "Guid": "G", "Title Components": 2}
         text = "\n".join(convert_profile(profile, {}, "single").config)
-        self.assertIn("title = -", text)
+        self.assertRegex(text, r"(?m)^title = -\w+", msg=text)
 
     def test_custom_command_job_title_uses_command_name(self):
         profile = {"Custom Command": "Yes", "Command": "/usr/bin/top -u"}
