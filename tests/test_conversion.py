@@ -1,0 +1,84 @@
+import tempfile
+import unittest
+from pathlib import Path
+
+import plistlib
+
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from iterm2_to_ghostty import all_profiles, convert_profile, key_trigger, load_iterm_preferences
+
+
+class ConversionTests(unittest.TestCase):
+    def test_dynamic_profile_overlays_base_profile_by_guid(self):
+        prefs = {
+            "New Bookmarks": [
+                {
+                    "Name": "Base",
+                    "Guid": "G",
+                    "Normal Font": "Menlo 12",
+                    "Background Color": {
+                        "Red Component": 0,
+                        "Green Component": 0,
+                        "Blue Component": 0,
+                    },
+                }
+            ],
+            "Default Bookmark Guid": "G",
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            dynamic_dir = Path(tmp)
+            (dynamic_dir / "profile.plist").write_bytes(
+                plistlib.dumps({"Profiles": [{"Name": "Overlay", "Guid": "G", "Columns": 100, "Rows": 30}]})
+            )
+            profiles = all_profiles(prefs, dynamic_dir)
+
+        self.assertEqual(len(profiles), 1)
+        self.assertEqual(profiles[0]["Name"], "Overlay")
+        self.assertEqual(profiles[0]["Normal Font"], "Menlo 12")
+        self.assertEqual(profiles[0]["Columns"], 100)
+
+    def test_background_tile_maps_to_repeat(self):
+        profile = {
+            "Name": "Image",
+            "Guid": "G",
+            "Background Image Location": "/tmp/bg.png",
+            "Background Image Mode": 1,
+        }
+        text = "\n".join(convert_profile(profile, {}, "single").config)
+        self.assertIn("background-image-fit = none", text)
+        self.assertIn("background-image-repeat = true", text)
+
+    def test_close_sessions_on_end_false_maps_to_wait_after_command(self):
+        profile = {"Name": "Keep", "Guid": "G", "Close Sessions On End": False}
+        text = "\n".join(convert_profile(profile, {}, "single").config)
+        self.assertIn("wait-after-command = true", text)
+
+    def test_color_output_is_bare_hex(self):
+        profile = {
+            "Name": "Color",
+            "Guid": "G",
+            "Background Color": {
+                "Red Component": 1,
+                "Green Component": 0.5,
+                "Blue Component": 0,
+            },
+        }
+        text = "\n".join(convert_profile(profile, {}, "single").config)
+        self.assertIn("background = ff8000", text)
+        self.assertNotIn('background = "#ff8000"', text)
+
+    def test_shifted_printable_key_trigger_uses_base_key(self):
+        self.assertEqual(key_trigger("0x5e-0x60000"), "ctrl+shift+6")
+
+    def test_load_iterm_preferences_from_explicit_path(self):
+        prefs = {"New Bookmarks": []}
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "prefs.plist"
+            path.write_bytes(plistlib.dumps(prefs))
+            self.assertEqual(load_iterm_preferences(path), prefs)
+
+
+if __name__ == "__main__":
+    unittest.main()
