@@ -292,17 +292,38 @@ POSTSCRIPT_STYLE_SUFFIXES = (
     "Italic",
     "BoldItalic",
     "Bold-Italic",
+    "MediumItalic",
+    "Medium-Italic",
     "Medium",
+    "LightItalic",
+    "Light-Italic",
     "Light",
+    "Retina",
+    "SemiboldItalic",
+    "Semibold-Italic",
     "Semibold",
     "SemiBold",
+    "HeavyItalic",
+    "Heavy-Italic",
     "Heavy",
+    "BlackItalic",
+    "Black-Italic",
     "Black",
+    "ThinItalic",
+    "Thin-Italic",
     "Thin",
 )
 
 POSTSCRIPT_FAMILY_ALIASES = {
+    "CascadiaCode": "Cascadia Code",
+    "FiraCode": "Fira Code",
+    "Hack": "Hack",
+    "JetBrainsMono": "JetBrains Mono",
+    "Menlo": "Menlo",
+    "MesloLGS-NF": "MesloLGS NF",
+    "Monaco": "Monaco",
     "SFMono": "SF Mono",
+    "SourceCodePro": "Source Code Pro",
 }
 
 

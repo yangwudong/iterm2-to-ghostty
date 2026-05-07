@@ -21,6 +21,9 @@ class ConversionTests(unittest.TestCase):
     def test_postscript_font_name_maps_to_ghostty_family(self):
         self.assertEqual(ghostty_font_family("SFMono-Regular"), "SF Mono")
         self.assertEqual(ghostty_font_family("Menlo-Regular"), "Menlo")
+        self.assertEqual(ghostty_font_family("JetBrainsMono-Regular"), "JetBrains Mono")
+        self.assertEqual(ghostty_font_family("FiraCode-Retina"), "Fira Code")
+        self.assertEqual(ghostty_font_family("MesloLGS-NF-Regular"), "MesloLGS NF")
         self.assertEqual(ghostty_font_family("Monaco"), "Monaco")
 
     def test_dynamic_profile_overlays_base_profile_by_guid(self):
