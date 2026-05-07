@@ -286,13 +286,44 @@ def color_to_hex(value: Any) -> str | None:
     return f"{clamp(r):02x}{clamp(g):02x}{clamp(b):02x}"
 
 
+POSTSCRIPT_STYLE_SUFFIXES = (
+    "Regular",
+    "Bold",
+    "Italic",
+    "BoldItalic",
+    "Bold-Italic",
+    "Medium",
+    "Light",
+    "Semibold",
+    "SemiBold",
+    "Heavy",
+    "Black",
+    "Thin",
+)
+
+POSTSCRIPT_FAMILY_ALIASES = {
+    "SFMono": "SF Mono",
+}
+
+
+def ghostty_font_family(postscript_name: str) -> str:
+    """Convert common iTerm2 PostScript font names to Ghostty family names."""
+    name = postscript_name.strip()
+    for suffix in POSTSCRIPT_STYLE_SUFFIXES:
+        marker = f"-{suffix}"
+        if name.endswith(marker):
+            family = name[: -len(marker)]
+            return POSTSCRIPT_FAMILY_ALIASES.get(family, family)
+    return POSTSCRIPT_FAMILY_ALIASES.get(name, name)
+
+
 def parse_font(value: Any) -> tuple[str, float | None] | None:
     if not isinstance(value, str) or not value.strip():
         return None
     match = re.match(r"^(?P<name>.*?)[ ,]+(?P<size>\d+(?:\.\d+)?)$", value.strip())
     if not match:
-        return (value.strip(), None)
-    name = match.group("name").strip()
+        return (ghostty_font_family(value.strip()), None)
+    name = ghostty_font_family(match.group("name"))
     size = float(match.group("size"))
     return name, size
 

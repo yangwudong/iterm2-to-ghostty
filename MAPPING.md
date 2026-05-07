@@ -33,7 +33,7 @@ which is how iTerm2 treats sparse dynamic profiles.
 | `Selection Color` | `selection-background` |
 | `Selected Text Color` | `selection-foreground` |
 | `Ansi 0 Color` … `Ansi 15 Color` | `palette = 0=...` … `15=...` |
-| `Normal Font` | `font-family`, `font-size` |
+| `Normal Font` | `font-family`, `font-size`; common PostScript names like `SFMono-Regular` are converted to Ghostty family names like `SF Mono` |
 | `Non Ascii Font` | extra `font-family` fallback |
 | `ASCII Ligatures` / `Non-ASCII Ligatures` false | `font-feature` disabling common ligature features |
 | `Use Bold Font` false | `font-style-bold = false` |

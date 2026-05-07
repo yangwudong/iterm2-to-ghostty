@@ -12,11 +12,17 @@ from iterm2_to_ghostty import (
     convert_profile,
     infer_job_title,
     key_trigger,
+    ghostty_font_family,
     load_iterm_preferences,
 )
 
 
 class ConversionTests(unittest.TestCase):
+    def test_postscript_font_name_maps_to_ghostty_family(self):
+        self.assertEqual(ghostty_font_family("SFMono-Regular"), "SF Mono")
+        self.assertEqual(ghostty_font_family("Menlo-Regular"), "Menlo")
+        self.assertEqual(ghostty_font_family("Monaco"), "Monaco")
+
     def test_dynamic_profile_overlays_base_profile_by_guid(self):
         prefs = {
             "New Bookmarks": [
