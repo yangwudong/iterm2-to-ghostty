@@ -113,7 +113,7 @@ class ConversionTests(unittest.TestCase):
         profile = {"Name": "P", "Guid": "G", "Cursor Type": 0}
         text = "\n".join(convert_profile(profile, {}, "single").config)
         self.assertIn("cursor-style = underline", text)
-        self.assertIn("adjust-cursor-thickness = 1", text)
+        self.assertIn("adjust-cursor-thickness = 2", text)
         self.assertIn("shell-integration-features = no-cursor", text)
 
     def test_unsynced_iterm_title_disables_ghostty_shell_title(self):
