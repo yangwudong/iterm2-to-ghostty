@@ -85,10 +85,16 @@ class ConversionTests(unittest.TestCase):
         self.assertIn("window-theme = light", text)
         self.assertIn("macos-titlebar-proxy-icon = hidden", text)
 
-    def test_unsynced_iterm_title_disables_ghostty_shell_title(self):
-        profile = {"Name": "P", "Guid": "G", "Sync Title": False}
+    def test_iterm_cursor_shape_disables_ghostty_prompt_cursor_override(self):
+        profile = {"Name": "P", "Guid": "G", "Cursor Type": 0}
         text = "\n".join(convert_profile(profile, {}, "single").config)
-        self.assertIn("shell-integration-features = no-title", text)
+        self.assertIn("cursor-style = underline", text)
+        self.assertIn("shell-integration-features = no-cursor", text)
+
+    def test_unsynced_iterm_title_disables_ghostty_shell_title(self):
+        profile = {"Name": "P", "Guid": "G", "Cursor Type": 0, "Sync Title": False}
+        text = "\n".join(convert_profile(profile, {}, "single").config)
+        self.assertIn("shell-integration-features = no-cursor,no-title", text)
 
     def test_load_iterm_preferences_from_explicit_path(self):
         prefs = {"New Bookmarks": []}

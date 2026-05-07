@@ -475,11 +475,17 @@ def convert_cursor_and_input(profile: dict[str, Any], conv: Conversion) -> None:
             "TERM/terminal behavior."
         )
 
+    shell_features = []
+    # Ghostty's shell integration changes the cursor to a bar at the prompt.
+    # iTerm2 keeps the profile cursor shape there, so disable just that part.
+    if "Cursor Type" in profile:
+        shell_features.append("no-cursor")
     # iTerm2's default title in a plain shell is usually the process name
-    # (for example, "-zsh"). Ghostty's shell integration otherwise changes it
-    # to the working directory, which is a visible mismatch.
+    # (for example, "-zsh"). Ghostty otherwise changes it to the cwd.
     if profile.get("Sync Title") is False and not profile.get("Use Custom Window Title"):
-        add_line(conv.config, "shell-integration-features", "no-title")
+        shell_features.append("no-title")
+    if shell_features:
+        add_line(conv.config, "shell-integration-features", ",".join(shell_features))
 
 
 def convert_global_prefs(prefs: dict[str, Any], conv: Conversion) -> None:
