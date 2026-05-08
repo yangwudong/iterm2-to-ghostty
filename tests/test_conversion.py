@@ -121,6 +121,25 @@ class ConversionTests(unittest.TestCase):
         text = "\n".join(convert_profile(profile, {}, "single").config)
         self.assertIn("shell-integration-features = no-cursor,no-title", text)
 
+    def test_default_command_arrow_keybinds_switch_tabs(self):
+        text = "\n".join(convert_profile({"Name": "P", "Guid": "G"}, {}, "single").config)
+        self.assertIn("keybind = super+left=previous_tab", text)
+        self.assertIn("keybind = super+right=next_tab", text)
+
+    def test_optional_iterm_keybinding_conventions(self):
+        text = "\n".join(
+            convert_profile(
+                {"Name": "P", "Guid": "G"},
+                {},
+                "single",
+                iterm_keybinding_conventions=True,
+            ).config
+        )
+        self.assertIn("keybind = super+shift+left=move_tab:-1", text)
+        self.assertIn("keybind = super+left_bracket=previous_tab", text)
+        self.assertIn("keybind = super+alt+left=goto_split:left", text)
+        self.assertIn("keybind = super+d=new_split:right", text)
+
     def test_load_iterm_preferences_from_explicit_path(self):
         prefs = {"New Bookmarks": []}
         with tempfile.TemporaryDirectory() as tmp:

@@ -42,6 +42,26 @@ CURSOR_TYPES = {0: "underline", 1: "bar", 2: "block"}
 TITLE_COMPONENT_JOB = 1 << 1
 OPTION_SENDS_ALT_VALUES = {1, 2, "1", "2"}  # META or ESC both aim at terminal alt/meta behavior.
 
+ITERM_TAB_SWITCH_KEYBINDS = [
+    "super+left=previous_tab",
+    "super+right=next_tab",
+]
+
+ITERM_KEYBINDING_CONVENTIONS = [
+    "super+shift+left=move_tab:-1",
+    "super+shift+right=move_tab:+1",
+    "super+left_bracket=previous_tab",
+    "super+right_bracket=next_tab",
+    "super+shift+left_bracket=move_tab:-1",
+    "super+shift+right_bracket=move_tab:+1",
+    "super+alt+left=goto_split:left",
+    "super+alt+right=goto_split:right",
+    "super+alt+up=goto_split:up",
+    "super+alt+down=goto_split:down",
+    "super+d=new_split:right",
+    "super+shift+d=new_split:down",
+]
+
 # NSEvent modifier flags as stored in iTerm2 key map strings.
 MODIFIER_MASKS = [
     (0x100000, "super"),
@@ -623,6 +643,18 @@ def zig_text_literal(text: str) -> str:
     return text.replace("\\", "\\\\").replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t")
 
 
+def add_tab_switch_keybinds(conv: Conversion) -> None:
+    """Match iTerm2's common Command+arrow tab switching shortcuts."""
+    for binding in ITERM_TAB_SWITCH_KEYBINDS:
+        add_line(conv.config, "keybind", binding)
+
+
+def add_iterm_keybinding_conventions(conv: Conversion) -> None:
+    """Add optional iTerm2/macOS-style tab and split navigation shortcuts."""
+    for binding in ITERM_KEYBINDING_CONVENTIONS:
+        add_line(conv.config, "keybind", binding)
+
+
 def convert_keymap(profile: dict[str, Any], conv: Conversion) -> None:
     keymap = profile.get("Keyboard Map")
     if not isinstance(keymap, dict):
@@ -662,7 +694,12 @@ def convert_keymap(profile: dict[str, Any], conv: Conversion) -> None:
         )
 
 
-def convert_profile(profile: dict[str, Any], prefs: dict[str, Any], color_mode: str) -> Conversion:
+def convert_profile(
+    profile: dict[str, Any],
+    prefs: dict[str, Any],
+    color_mode: str,
+    iterm_keybinding_conventions: bool = False,
+) -> Conversion:
     conv = Conversion()
     name = profile.get("Name", "<unnamed>")
     conv.config.extend([
@@ -690,6 +727,9 @@ def convert_profile(profile: dict[str, Any], prefs: dict[str, Any], color_mode: 
     convert_terminal(profile, conv)
     convert_cursor_and_input(profile, conv)
     convert_global_prefs(prefs, conv)
+    add_tab_switch_keybinds(conv)
+    if iterm_keybinding_conventions:
+        add_iterm_keybinding_conventions(conv)
     convert_keymap(profile, conv)
 
     for key, reason in UNSUPPORTED_PROFILE_KEYS.items():
@@ -795,6 +835,14 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         help="Print generated config instead of writing files",
     )
     parser.add_argument(
+        "--iterm-keybinding-conventions",
+        action="store_true",
+        help=(
+            "Add extra iTerm2/macOS-style tab movement, bracket tab navigation, "
+            "and split shortcuts"
+        ),
+    )
+    parser.add_argument(
         "--no-backup",
         action="store_true",
         help="Do not back up an existing output file",
@@ -816,7 +864,12 @@ def main(argv: list[str]) -> int:
         return 0
 
     profile = select_profile(profiles, prefs, args.profile)
-    conv = convert_profile(profile, prefs, args.color_mode)
+    conv = convert_profile(
+        profile,
+        prefs,
+        args.color_mode,
+        args.iterm_keybinding_conventions,
+    )
     write_outputs(
         conv,
         args.output,

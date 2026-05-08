@@ -42,6 +42,8 @@ copy first. Use `--no-backup` if you do not want that.
 --color-mode MODE           auto, single, light, or dark
 --output PATH               write a different Ghostty config file
 --dry-run                   print the result instead of writing files
+--iterm-keybinding-conventions
+                            add extra iTerm2/macOS-style tab and split shortcuts
 --no-backup                 skip the config.bak backup
 ```
 

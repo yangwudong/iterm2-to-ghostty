@@ -64,6 +64,8 @@ which is how iTerm2 treats sparse dynamic profiles.
 | `Minimum Contrast` | `minimum-contrast`, scaled from 0–1 to 1–21 |
 | `Option Key Sends`, `Right Option Key Sends` | `macos-option-as-alt` |
 | simple `Keyboard Map` entries | `keybind` |
+| iTerm2 Command+Left/Right tab switching convention | `keybind = super+left=previous_tab`, `keybind = super+right=next_tab` |
+| optional iTerm2/macOS keybinding conventions | enabled with `--iterm-keybinding-conventions`; adds tab movement, bracket tab navigation, and split shortcuts |
 | `Title Components` set to job only | static `title` based on the shell or custom command |
 | `Sync Title` false | `shell-integration-features = no-title` |
 
