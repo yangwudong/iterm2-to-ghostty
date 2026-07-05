@@ -217,5 +217,42 @@ class NormalizeProfileTests(unittest.TestCase):
         self.assertEqual(result["working_directory"], "/Users/jack/work/build")
 
 
+import json
+import tempfile
+from iterm2_to_ghostty import build_profiles_document
+
+
+class BuildProfilesDocumentTests(unittest.TestCase):
+    def test_includes_all_non_skip_profiles_sorted_by_id(self):
+        prefs = {
+            "New Bookmarks": [
+                {"Name": "Zeta", "Command": "ssh a@z", "Custom Command": "No"},
+                {"Name": "Default", "Command": "/bin/zsh", "Custom Command": "No"},
+                {"Name": "Alpha", "Command": "cd", "Custom Command": "No",
+                 "Working Directory": "/x", "Custom Directory": "Yes"},
+            ]
+        }
+        doc = build_profiles_document(prefs, dynamic_dir=None)
+        names = [p["name"] for p in doc["profiles"]]
+        self.assertEqual(names, ["Alpha", "Zeta"])  # Default skipped, sorted by id
+        self.assertEqual(doc["schema_version"], 1)
+        self.assertEqual(doc["source"], "com.googlecode.iterm2")
+        self.assertIn("exported_at", doc)
+
+    def test_idempotent_profiles_array(self):
+        prefs = {"New Bookmarks": [
+            {"Name": "B", "Command": "ssh b@host", "Custom Command": "No"},
+            {"Name": "A", "Command": "ssh a@host", "Custom Command": "No"},
+        ]}
+        d1 = build_profiles_document(prefs, None)
+        d2 = build_profiles_document(prefs, None)
+        # exported_at may differ; profiles array must be byte-identical.
+        self.assertEqual(d1["profiles"], d2["profiles"])
+
+    def test_empty_when_no_bookmarks(self):
+        doc = build_profiles_document({"New Bookmarks": []}, None)
+        self.assertEqual(doc["profiles"], [])
+
+
 if __name__ == "__main__":
     unittest.main()

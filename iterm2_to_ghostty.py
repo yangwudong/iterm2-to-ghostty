@@ -468,6 +468,25 @@ def normalize_profile(bookmark: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def build_profiles_document(
+    prefs: dict[str, Any], dynamic_dir: Path | None
+) -> dict[str, Any]:
+    """Build the full profiles.json document from iTerm2 preferences (spec §3)."""
+    from datetime import datetime, timezone
+
+    bookmarks = all_profiles(prefs, dynamic_dir)
+    normalized = [normalize_profile(b) for b in bookmarks if isinstance(b, dict)]
+    # Keep skipped profiles OUT of the document entirely (cleaner for the UI).
+    normalized = [p for p in normalized if not p.get("skip")]
+    normalized.sort(key=lambda p: p["id"])
+    return {
+        "schema_version": 1,
+        "exported_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "source": ITERM_DOMAIN,
+        "profiles": normalized,
+    }
+
+
 def escape_value(value: Any) -> str:
     s = str(value)
     if not s:
@@ -1014,6 +1033,15 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         help="List discovered iTerm2 profiles and exit",
     )
     parser.add_argument(
+        "--export-profiles-json",
+        type=Path,
+        nargs="?",
+        const=Path.home() / ".config" / "ghostty" / "profiles.json",
+        help="Export ALL iTerm2 profiles to a normalized JSON file for the Raycast "
+        "extension. Writes to the given path, or ~/.config/ghostty/profiles.json "
+        "if no path is given.",
+    )
+    parser.add_argument(
         "--color-mode",
         choices=["auto", "single", "light", "dark"],
         default="auto",
@@ -1057,6 +1085,18 @@ def main(argv: list[str]) -> int:
             marker = "*" if p.get("Guid") == default_guid else " "
             source = p.get("__source", "preferences")
             print(f"{marker} {p.get('Name', '<unnamed>')}\t{p.get('Guid', '')}\t{source}")
+        return 0
+
+    if args.export_profiles_json is not None:
+        document = build_profiles_document(prefs, args.dynamic_profiles_dir)
+        payload = json.dumps(document, indent=2, ensure_ascii=False) + "\n"
+        if args.dry_run:
+            sys.stdout.write(payload)
+        else:
+            output_path: Path = args.export_profiles_json
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            output_path.write_text(payload, encoding="utf-8")
+            print(f"Wrote {len(document['profiles'])} profiles to {output_path}")
         return 0
 
     profile = select_profile(profiles, prefs, args.profile)
