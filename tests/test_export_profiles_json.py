@@ -134,5 +134,64 @@ class CommandTokensTests(unittest.TestCase):
         self.assertEqual(command_tokens("cd"), [])
 
 
+from iterm2_to_ghostty import normalize_profile
+
+
+class NormalizeProfileTests(unittest.TestCase):
+    def test_ssh_profile_shape(self):
+        bm = {
+            "Name": "Perficient PC Ubuntu",
+            "Guid": "FC192D07-5633-4AD2-8D54-B43A9D76ADFA",
+            "Custom Command": "No",
+            "Command": "ssh jack@ubuntu1.jyang.eu.org",
+            "Custom Directory": "No",
+            "Working Directory": "/Users/jack",
+        }
+        result = normalize_profile(bm)
+        self.assertEqual(result["id"], "perficient-pc-ubuntu")
+        self.assertEqual(result["name"], "Perficient PC Ubuntu")
+        self.assertEqual(result["type"], "ssh")
+        self.assertEqual(result["command"], "ssh jack@ubuntu1.jyang.eu.org")
+        self.assertEqual(result["working_directory"], "/Users/jack")
+        self.assertIn("ubuntu1", result["tags"])
+        self.assertIn("perficient", result["tags"])
+        self.assertTrue(result["tags"] == sorted(result["tags"]))  # sorted for stability
+        self.assertFalse(result["skip"])
+        self.assertEqual(result["raw"]["Guid"], "FC192D07-5633-4AD2-8D54-B43A9D76ADFA")
+
+    def test_shell_profile_has_null_command(self):
+        bm = {
+            "Name": "BeCon Micro-Services",
+            "Custom Command": "No",
+            "Command": "cd",
+            "Custom Directory": "Yes",
+            "Working Directory": "/Users/jack/workspaces/becon/beco.cloud.connectivity",
+        }
+        result = normalize_profile(bm)
+        self.assertEqual(result["type"], "shell")
+        self.assertIsNone(result["command"])
+        self.assertEqual(
+            result["working_directory"],
+            "/Users/jack/workspaces/becon/beco.cloud.connectivity",
+        )
+        self.assertIn("becon", result["tags"])
+        self.assertIn("connectivity", result["tags"])
+
+    def test_default_profile_is_skipped(self):
+        bm = {"Name": "Default", "Command": "/bin/zsh", "Custom Command": "No"}
+        result = normalize_profile(bm)
+        self.assertTrue(result["skip"])
+
+    def test_tags_are_deduped_and_lowercased(self):
+        bm = {
+            "Name": "NAS NAS",
+            "Command": "ssh admin@nas.local",
+            "Custom Command": "No",
+        }
+        result = normalize_profile(bm)
+        self.assertEqual(len(result["tags"]), len(set(result["tags"])))
+        self.assertTrue(all(t == t.lower() for t in result["tags"]))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -416,6 +416,57 @@ def command_tokens(command: str) -> list[str]:
     return out
 
 
+def extract_tags(bookmark: dict[str, Any], profile_type: str) -> list[str]:
+    """Aggregate, dedupe, lowercase, and sort all search tags for a profile."""
+    name = str(bookmark.get("Name", ""))
+    raw_cmd = str(bookmark.get("Command", "") or "")
+    wd = str(bookmark.get("Working Directory", "") or "")
+    collected: set[str] = set()
+    collected.update(name_tokens(name))
+    collected.add(prefix_bucket(name))
+    if profile_type == "ssh":
+        collected.update(ssh_tokens(raw_cmd))
+    collected.update(path_segments(wd))
+    if profile_type == "command":
+        collected.update(command_tokens(raw_cmd))
+    collected.discard("")
+    return sorted(collected)
+
+
+def normalize_profile(bookmark: dict[str, Any]) -> dict[str, Any]:
+    """Normalize one iTerm2 bookmark dict into the profiles.json shape (spec §3)."""
+    name = str(bookmark.get("Name", "") or "<unnamed>")
+    profile_type = detect_type(bookmark)
+    raw_cmd = str(bookmark.get("Command", "") or "").strip()
+    custom_dir = str(bookmark.get("Custom Directory", "No"))
+    wd_raw = str(bookmark.get("Working Directory", "") or "").strip()
+    working_directory = wd_raw if wd_raw and custom_dir in ("Yes", "Custom") else (
+        wd_raw if wd_raw and profile_type != "shell" else (wd_raw or None)
+    )
+    command: str | None
+    if profile_type in ("ssh", "command"):
+        command = raw_cmd or None
+    else:
+        command = None
+    skip = (name == "Default")
+    return {
+        "id": slugify_id(name),
+        "name": name,
+        "type": profile_type,
+        "working_directory": working_directory,
+        "command": command,
+        "tags": extract_tags(bookmark, profile_type),
+        "skip": skip,
+        "raw": {
+            "Guid": bookmark.get("Guid"),
+            "Custom Command": bookmark.get("Custom Command"),
+            "Command": bookmark.get("Command"),
+            "Working Directory": bookmark.get("Working Directory"),
+            "Custom Directory": bookmark.get("Custom Directory"),
+        },
+    }
+
+
 def escape_value(value: Any) -> str:
     s = str(value)
     if not s:
