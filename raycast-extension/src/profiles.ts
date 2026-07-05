@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import type { Profile, ProfilesDocument } from "./types";
 
 export class ProfilesError extends Error {
@@ -53,4 +53,15 @@ export function loadProfiles(path: string = DEFAULT_PROFILES_PATH): LoadedProfil
     profiles: doc.profiles.filter((p) => p && !p.skip) as Profile[],
     order: order as string[],
   };
+}
+
+/**
+ * Persist a new `order` array into profiles.json via read-modify-write.
+ * Preserves every other field (profiles, source, etc.). Throws on I/O or parse error.
+ */
+export function saveProfilesOrder(path: string = DEFAULT_PROFILES_PATH, order: string[]): void {
+  const raw = readFileSync(path, "utf-8");
+  const doc = JSON.parse(raw) as Record<string, unknown>;
+  doc.order = order;
+  writeFileSync(path, JSON.stringify(doc, null, 2) + "\n", "utf-8");
 }

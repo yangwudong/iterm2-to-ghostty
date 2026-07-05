@@ -15,7 +15,7 @@ import { buildAppleScript, LaunchTarget } from "./applescript";
 import { sortByOrder } from "./ordering";
 import type { Profile } from "./types";
 
-function iconForType(type: Profile["type"]) {
+export function iconForType(type: Profile["type"]) {
   switch (type) {
     case "ssh":
       return Icon.Globe;
@@ -26,7 +26,7 @@ function iconForType(type: Profile["type"]) {
   }
 }
 
-function subtitleFor(profile: Profile): string {
+export function subtitleFor(profile: Profile): string {
   if (profile.command) return profile.command;
   if (profile.working_directory) return profile.working_directory;
   return "(default shell)";
