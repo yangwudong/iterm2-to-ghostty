@@ -85,13 +85,13 @@ export default function Command() {
               <Action
                 title="Move Up"
                 icon={Icon.ArrowUp}
-                shortcut={{ modifiers: ["opt"], key: "u" }}
+                shortcut={{ modifiers: ["cmd"], key: "u" }}
                 onAction={() => apply(moveUp(order, profile.id))}
               />
               <Action
                 title="Move Down"
                 icon={Icon.ArrowDown}
-                shortcut={{ modifiers: ["opt"], key: "d" }}
+                shortcut={{ modifiers: ["cmd"], key: "d" }}
                 onAction={() => apply(moveDown(order, profile.id))}
               />
               <Action
