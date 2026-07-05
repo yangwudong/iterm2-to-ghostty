@@ -192,6 +192,30 @@ class NormalizeProfileTests(unittest.TestCase):
         self.assertEqual(len(result["tags"]), len(set(result["tags"])))
         self.assertTrue(all(t == t.lower() for t in result["tags"]))
 
+    def test_shell_without_custom_dir_drops_stale_working_directory(self):
+        bm = {
+            "Name": "Stale Shell",
+            "Custom Command": "No",
+            "Command": "cd",
+            "Custom Directory": "No",
+            "Working Directory": "/Users/jack/should-be-ignored",
+        }
+        result = normalize_profile(bm)
+        self.assertIsNone(result["working_directory"])
+
+    def test_command_profile_keeps_command_and_working_directory(self):
+        bm = {
+            "Name": "Builder",
+            "Custom Command": "Yes",
+            "Command": "docker compose up",
+            "Custom Directory": "Yes",
+            "Working Directory": "/Users/jack/work/build",
+        }
+        result = normalize_profile(bm)
+        self.assertEqual(result["type"], "command")
+        self.assertEqual(result["command"], "docker compose up")
+        self.assertEqual(result["working_directory"], "/Users/jack/work/build")
+
 
 if __name__ == "__main__":
     unittest.main()

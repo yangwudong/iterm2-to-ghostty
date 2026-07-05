@@ -440,9 +440,10 @@ def normalize_profile(bookmark: dict[str, Any]) -> dict[str, Any]:
     raw_cmd = str(bookmark.get("Command", "") or "").strip()
     custom_dir = str(bookmark.get("Custom Directory", "No"))
     wd_raw = str(bookmark.get("Working Directory", "") or "").strip()
-    working_directory = wd_raw if wd_raw and custom_dir in ("Yes", "Custom") else (
-        wd_raw if wd_raw and profile_type != "shell" else (wd_raw or None)
-    )
+    if profile_type == "shell" and custom_dir not in ("Yes", "Custom"):
+        working_directory = None
+    else:
+        working_directory = wd_raw or None
     command: str | None
     if profile_type in ("ssh", "command"):
         command = raw_cmd or None
