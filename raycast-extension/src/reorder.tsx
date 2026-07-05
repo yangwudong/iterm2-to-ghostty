@@ -68,7 +68,7 @@ export default function Command() {
 
   return (
     <List
-      navigationTitle="Reorder iTerm Profiles"
+      navigationTitle="Reorder Ghostty Profiles"
       searchBarPlaceholder="Find a profile to move (clear search before bulk moves)"
     >
       {sorted.map((profile, index) => (
@@ -85,25 +85,25 @@ export default function Command() {
               <Action
                 title="Move Up"
                 icon={Icon.ArrowUp}
-                shortcut={{ modifiers: ["opt"], key: "arrowUp" }}
+                shortcut={{ modifiers: ["opt"], key: "u" }}
                 onAction={() => apply(moveUp(order, profile.id))}
               />
               <Action
                 title="Move Down"
                 icon={Icon.ArrowDown}
-                shortcut={{ modifiers: ["opt"], key: "arrowDown" }}
+                shortcut={{ modifiers: ["opt"], key: "d" }}
                 onAction={() => apply(moveDown(order, profile.id))}
               />
               <Action
                 title="Move to Top"
                 icon={Icon.ChevronUp}
-                shortcut={{ modifiers: ["opt", "cmd"], key: "arrowUp" }}
+                shortcut={{ modifiers: ["opt", "cmd"], key: "u" }}
                 onAction={() => apply(moveToTop(order, profile.id))}
               />
               <Action
                 title="Move to Bottom"
                 icon={Icon.ChevronDown}
-                shortcut={{ modifiers: ["opt", "cmd"], key: "arrowDown" }}
+                shortcut={{ modifiers: ["opt", "cmd"], key: "d" }}
                 onAction={() => apply(moveToBottom(order, profile.id))}
               />
               <Action

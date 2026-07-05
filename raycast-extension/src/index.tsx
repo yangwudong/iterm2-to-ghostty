@@ -153,7 +153,7 @@ export default function Command() {
 
   return (
     <List
-      navigationTitle="iTerm Profiles"
+      navigationTitle="Ghostty Profiles"
       searchBarPlaceholder="Search profiles by name, host, tag…"
       actions={
         <ActionPanel>

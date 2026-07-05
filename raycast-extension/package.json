@@ -10,15 +10,15 @@
   "commands": [
     {
       "name": "index",
-      "title": "Search iTerm Profiles",
-      "description": "Search exported iTerm2 profiles and open in Ghostty.",
+      "title": "Search Ghostty Profiles",
+      "description": "Search exported profiles and open them in Ghostty.",
       "mode": "view",
       "keywords": ["iterm", "ghostty", "terminal", "ssh"]
     },
     {
       "name": "reorder",
-      "title": "Reorder iTerm Profiles",
-      "description": "Set a custom display order for exported iTerm profiles.",
+      "title": "Reorder Ghostty Profiles",
+      "description": "Set a custom display order for exported Ghostty profiles.",
       "mode": "view",
       "keywords": ["iterm", "ghostty", "order", "sort"]
     }
