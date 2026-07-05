@@ -250,5 +250,59 @@ class BuildProfilesDocumentTests(unittest.TestCase):
         self.assertEqual(doc["profiles"], [])
 
 
+class OrderMergeTests(unittest.TestCase):
+    def _doc(self, names_and_types, existing_order=None):
+        """Build a prefs dict of bookmarks named [(name, command), ...]."""
+        prefs = {"New Bookmarks": [
+            {"Name": n, "Command": c, "Custom Command": "No"} for n, c in names_and_types
+        ]}
+        return build_profiles_document(prefs, None, existing_order)
+
+    def test_first_export_order_is_alphabetical_by_name(self):
+        doc = self._doc([("Zeta", "ssh a@z"), ("Alpha", "ssh a@alpha"), ("Mi", "ssh a@mi")])
+        # order lists ids; ids are slugified names; sorted by NAME not id.
+        self.assertEqual(doc["order"], ["alpha", "mi", "zeta"])
+
+    def test_reexport_preserves_existing_order_for_kept_ids(self):
+        doc = self._doc(
+            [("Alpha", "ssh a@alpha"), ("Mi", "ssh a@mi"), ("Zeta", "ssh a@z")],
+            existing_order=["zeta", "mi", "alpha"],
+        )
+        self.assertEqual(doc["order"], ["zeta", "mi", "alpha"])
+
+    def test_reexport_drops_stale_ids(self):
+        # "ghost" is in existing_order but no longer a profile.
+        doc = self._doc(
+            [("Alpha", "ssh a@alpha"), ("Zeta", "ssh a@z")],
+            existing_order=["zeta", "ghost", "alpha"],
+        )
+        self.assertEqual(doc["order"], ["zeta", "alpha"])
+
+    def test_reexport_appends_new_ids_alphabetically_by_name(self):
+        doc = self._doc(
+            [("Alpha", "ssh a@alpha"), ("Beta", "ssh a@beta"), ("Zeta", "ssh a@z")],
+            existing_order=["zeta", "alpha"],  # Beta is new
+        )
+        self.assertEqual(doc["order"], ["zeta", "alpha", "beta"])
+
+    def test_combined_stale_and_new(self):
+        doc = self._doc(
+            [("Alpha", "ssh a@alpha"), ("Beta", "ssh a@beta"), ("Zeta", "ssh a@z")],
+            existing_order=["zeta", "ghost", "alpha"],  # ghost stale; beta new
+        )
+        self.assertEqual(doc["order"], ["zeta", "alpha", "beta"])
+
+    def test_existing_order_none_matches_first_export(self):
+        doc_none = self._doc([("Zeta", "ssh a@z"), ("Alpha", "ssh a@alpha")], existing_order=None)
+        doc_default = build_profiles_document(
+            {"New Bookmarks": [
+                {"Name": "Zeta", "Command": "ssh a@z", "Custom Command": "No"},
+                {"Name": "Alpha", "Command": "ssh a@alpha", "Custom Command": "No"},
+            ]},
+            None,
+        )
+        self.assertEqual(doc_none["order"], doc_default["order"])
+
+
 if __name__ == "__main__":
     unittest.main()

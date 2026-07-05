@@ -470,18 +470,34 @@ def normalize_profile(bookmark: dict[str, Any]) -> dict[str, Any]:
 
 
 def build_profiles_document(
-    prefs: dict[str, Any], dynamic_dir: Path | None
+    prefs: dict[str, Any],
+    dynamic_dir: Path | None,
+    existing_order: list[str] | None = None,
 ) -> dict[str, Any]:
-    """Build the full profiles.json document from iTerm2 preferences (spec §3)."""
+    """Build the full profiles.json document from iTerm2 preferences (spec §3, §4.2)."""
     bookmarks = all_profiles(prefs, dynamic_dir)
     normalized = [normalize_profile(b) for b in bookmarks if isinstance(b, dict)]
     # Keep skipped profiles OUT of the document entirely (cleaner for the UI).
     normalized = [p for p in normalized if not p.get("skip")]
     normalized.sort(key=lambda p: p["id"])
+
+    name_by_id = {p["id"]: p["name"] for p in normalized}
+    if existing_order:
+        existing_set = set(existing_order)
+        kept = [i for i in existing_order if i in name_by_id]  # drop stale/renamed ids
+        added = sorted(
+            (i for i in name_by_id if i not in existing_set),
+            key=lambda i: name_by_id[i],
+        )
+        order = kept + added
+    else:
+        order = sorted(name_by_id.keys(), key=lambda i: name_by_id[i])
+
     return {
         "schema_version": 1,
         "exported_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "source": ITERM_DOMAIN,
+        "order": order,
         "profiles": normalized,
     }
 
@@ -1087,7 +1103,18 @@ def main(argv: list[str]) -> int:
         return 0
 
     if args.export_profiles_json is not None:
-        document = build_profiles_document(prefs, args.dynamic_profiles_dir)
+        existing_order: list[str] | None = None
+        if not args.dry_run and args.export_profiles_json.exists():
+            try:
+                with open(args.export_profiles_json, "rb") as fh:
+                    old = json.load(fh)
+                if isinstance(old.get("order"), list):
+                    existing_order = [str(x) for x in old["order"]]
+            except (OSError, ValueError):
+                existing_order = None
+        document = build_profiles_document(
+            prefs, args.dynamic_profiles_dir, existing_order
+        )
         payload = json.dumps(document, indent=2, ensure_ascii=False) + "\n"
         if args.dry_run:
             sys.stdout.write(payload)
