@@ -11,7 +11,7 @@ export function escapeAppleString(s: string): string {
  * Build a Ghostty AppleScript that opens the given profile.
  * `tab`: new tab in the frontmost window (falls back to a new window if none).
  * `window`: always a new window.
- * `split`: new tab, then split right (low-priority action).
+ * `split`: split the active terminal right (new-window fallback if none).
  */
 export function buildAppleScript(profile: Profile, target: LaunchTarget): string {
   const lines: string[] = [];
