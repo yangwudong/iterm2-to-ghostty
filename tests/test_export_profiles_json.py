@@ -48,5 +48,85 @@ class DetectTypeTests(unittest.TestCase):
         self.assertEqual(detect_type(bm), "shell")
 
 
+from iterm2_to_ghostty import (
+    name_tokens,
+    prefix_bucket,
+    ssh_tokens,
+    path_segments,
+    command_tokens,
+)
+
+
+class NameTokensTests(unittest.TestCase):
+    def test_splits_on_spaces_and_case(self):
+        self.assertEqual(
+            name_tokens("BeCon Micro-Services China QA"),
+            ["becon", "micro", "services", "china", "qa"],
+        )
+
+    def test_drops_empty_and_short(self):
+        self.assertEqual(name_tokens("A B cc"), ["cc"])
+
+    def test_lowercases(self):
+        self.assertEqual(name_tokens("NAS"), ["nas"])
+
+
+class PrefixBucketTests(unittest.TestCase):
+    def test_becon(self):
+        self.assertEqual(prefix_bucket("BeCon Micro-Services"), "becon")
+
+    def test_scp(self):
+        self.assertEqual(prefix_bucket("SCP BLE SDK"), "scp")
+
+    def test_cloud_for_oracel(self):
+        self.assertEqual(prefix_bucket("Oracel Cloud Korea 1"), "cloud")
+
+    def test_home_for_nas(self):
+        self.assertEqual(prefix_bucket("NAS2"), "home")
+
+    def test_misc_default(self):
+        self.assertEqual(prefix_bucket("Go Bootcamp"), "dev")
+        self.assertEqual(prefix_bucket("Something Weird"), "misc")
+
+
+class SshTokensTests(unittest.TestCase):
+    def test_user_and_host_and_domain(self):
+        self.assertEqual(
+            ssh_tokens("ssh jack@ubuntu1.jyang.eu.org"),
+            ["jack", "ubuntu1", "jyang", "eu", "org"],
+        )
+
+    def test_host_only(self):
+        self.assertEqual(ssh_tokens("ssh nas.local"), ["nas", "local"])
+
+    def test_empty_when_not_ssh(self):
+        self.assertEqual(ssh_tokens("docker compose up"), [])
+
+
+class PathSegmentsTests(unittest.TestCase):
+    def test_drops_username_and_users(self):
+        self.assertEqual(
+            path_segments("/Users/jack/workspaces/becon/beco.cloud.connectivity"),
+            ["workspaces", "becon", "beco", "cloud", "connectivity"],
+        )
+
+    def test_short_segments_dropped(self):
+        self.assertEqual(path_segments("/Users/jack/a/bccc"), ["bccc"])
+
+    def test_empty_for_home(self):
+        self.assertEqual(path_segments("/Users/jack"), [])
+
+
+class CommandTokensTests(unittest.TestCase):
+    def test_drops_stopwords(self):
+        self.assertEqual(
+            sorted(command_tokens("cd ~/work && docker compose up")),
+            ["compose", "docker"],
+        )
+
+    def test_empty_for_just_cd(self):
+        self.assertEqual(command_tokens("cd"), [])
+
+
 if __name__ == "__main__":
     unittest.main()

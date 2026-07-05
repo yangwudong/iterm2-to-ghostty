@@ -313,6 +313,98 @@ def _looks_like_login_shell(first_token: str) -> bool:
     )
 
 
+PREFIX_BUCKETS = [
+    ("BeCon", "becon"),
+    ("SCP", "scp"),
+    ("Perficient", "perficient"),
+    ("Azure", "cloud"),
+    ("Oracel", "cloud"),
+    ("Oracle", "cloud"),
+    ("Bosch", "cloud"),
+    ("AlwaysData", "cloud"),
+    ("Serv00", "cloud"),
+    ("Mi", "home"),
+    ("NAS", "home"),
+    ("Home", "home"),
+    ("iPhone", "home"),
+    ("Router", "home"),
+    ("AI", "ai"),
+    ("Go Bootcamp", "dev"),
+    ("IndexTTS", "dev"),
+    ("Growth with Kids", "dev"),
+]
+DEV_NAMES = {"Go Bootcamp", "IndexTTS", "Growth with Kids"}
+COMMAND_STOPWORDS = {
+    "cd", "sudo", "and", "&&", "||", "|", ";", "echo", "exec", "source",
+    ".", "~", "../", "./", "bash", "sh", "zsh",
+}
+
+
+def name_tokens(name: str) -> list[str]:
+    """Split a profile name into lowercase search tokens."""
+    split = re.split(r"[\s\-_/\\]+", str(name))
+    return [t.lower() for t in split if len(t) >= 2]
+
+
+def prefix_bucket(name: str) -> str:
+    """Return a single coarse category tag based on the profile name prefix."""
+    n = str(name)
+    for prefix, bucket in PREFIX_BUCKETS:
+        if n.startswith(prefix):
+            if bucket == "dev" and n not in DEV_NAMES:
+                continue
+            return bucket
+    return "misc"
+
+
+def ssh_tokens(command: str) -> list[str]:
+    """Extract user, hostname, and domain segments from an ssh command."""
+    tokens = str(command).split()
+    if not tokens or tokens[0].lower() not in ("ssh",) and not tokens[0].endswith("/ssh"):
+        return []
+    target = ""
+    for tok in tokens[1:]:
+        if tok.startswith("-"):
+            continue
+        target = tok
+        break
+    if "@" in target:
+        user, _, host = target.partition("@")
+    else:
+        user, host = "", target
+    result: list[str] = []
+    if user:
+        result.append(user.lower())
+    host = host.split(":")[0]  # strip any port
+    for seg in host.split("."):
+        if seg and len(seg) >= 2:
+            result.append(seg.lower())
+    return result
+
+
+def path_segments(path: str) -> list[str]:
+    """Return non-trivial path segments, dropping /Users/<username>."""
+    parts = [p for p in re.split(r"[/.]", str(path)) if p]
+    # Drop leading "Users" and the following username segment.
+    if parts and parts[0] == "Users" and len(parts) >= 2:
+        parts = parts[2:]
+    return [p.lower() for p in parts if len(p) >= 3]
+
+
+def command_tokens(command: str) -> list[str]:
+    """Return non-stopword tokens from a command string."""
+    tokens = re.split(r"[\s&|;]+", str(command))
+    out: list[str] = []
+    for t in tokens:
+        low = t.lower()
+        if len(low) < 3 or low in COMMAND_STOPWORDS:
+            continue
+        if "/" in t or "\\" in t or t.startswith("~") or t.startswith("."):
+            continue
+        out.append(low)
+    return out
+
+
 def escape_value(value: Any) -> str:
     s = str(value)
     if not s:
