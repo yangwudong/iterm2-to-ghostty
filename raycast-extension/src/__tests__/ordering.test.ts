@@ -6,6 +6,7 @@ import {
   moveToTop,
   moveToBottom,
   resetOrder,
+  filterProfiles,
 } from "../ordering";
 import type { Profile } from "../types";
 
@@ -88,5 +89,50 @@ describe("resetOrder", () => {
   it("returns ids sorted alphabetically by name", () => {
     const ps = [profile("z", "Zeta"), profile("a", "Alpha"), profile("m", "Mi")];
     expect(resetOrder(ps)).toEqual(["a", "m", "z"]);
+  });
+});
+
+function fp(id: string, name: string, command: string | null, tags: string[]): Profile {
+  return { id, name, type: "shell", working_directory: null, command, tags, skip: false, raw: {} };
+}
+
+const F = [
+  fp("ub1", "Perficient PC Ubuntu", "ssh jack@ubuntu1.jyang.eu.org", ["perficient", "ubuntu1", "jack"]),
+  fp("nas", "NAS", "ssh admin@nas.local", ["nas", "home", "admin"]),
+  fp("becon-qa", "BeCon Micro China QA", null, ["becon", "china", "qa"]),
+];
+
+describe("filterProfiles", () => {
+  it("empty query returns all, order preserved", () => {
+    expect(filterProfiles(F, "").map((p) => p.id)).toEqual(["ub1", "nas", "becon-qa"]);
+  });
+
+  it("whitespace-only query returns all", () => {
+    expect(filterProfiles(F, "   ").map((p) => p.id)).toEqual(["ub1", "nas", "becon-qa"]);
+  });
+
+  it("single token matches name (case-insensitive)", () => {
+    expect(filterProfiles(F, "ubuntu").map((p) => p.id)).toEqual(["ub1"]);
+  });
+
+  it("single token matches a tag (e.g. ssh user 'jack')", () => {
+    expect(filterProfiles(F, "jack").map((p) => p.id)).toEqual(["ub1"]);
+  });
+
+  it("multi-token AND: all tokens must match somewhere", () => {
+    expect(filterProfiles(F, "becon qa").map((p) => p.id)).toEqual(["becon-qa"]);
+  });
+
+  it("multi-token AND excludes when only one token matches", () => {
+    expect(filterProfiles(F, "becon nas").map((p) => p.id)).toEqual([]);
+  });
+
+  it("order is preserved across multiple matches", () => {
+    // ub1 and nas both have 'ssh' in command; original order kept.
+    expect(filterProfiles(F, "ssh").map((p) => p.id)).toEqual(["ub1", "nas"]);
+  });
+
+  it("no match returns empty array", () => {
+    expect(filterProfiles(F, "zzz")).toEqual([]);
   });
 });

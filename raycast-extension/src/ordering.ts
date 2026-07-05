@@ -61,3 +61,15 @@ export function moveToBottom(order: string[], id: string): string[] {
 export function resetOrder(profiles: Profile[]): string[] {
   return profiles.slice().sort((a, b) => a.name.localeCompare(b.name)).map((p) => p.id);
 }
+
+/** Filter profiles by a search query: whitespace tokens are AND-ed, each must
+ *  match (case-insensitive substring) somewhere in name + command + tags.
+ *  Preserves the input order. Empty query returns the input unchanged. */
+export function filterProfiles(profiles: Profile[], query: string): Profile[] {
+  const tokens = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if (tokens.length === 0) return profiles;
+  return profiles.filter((p) => {
+    const hay = [p.name, p.command ?? "", ...p.tags].join(" ").toLowerCase();
+    return tokens.every((t) => hay.includes(t));
+  });
+}

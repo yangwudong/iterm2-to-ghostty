@@ -15,6 +15,7 @@ import {
 } from "./profiles";
 import {
   sortByOrder,
+  filterProfiles,
   moveUp,
   moveDown,
   moveToTop,
@@ -25,6 +26,7 @@ import type { Profile } from "./types";
 import { iconForType, subtitleFor } from "./index";
 
 export default function Command() {
+  const [searchText, setSearchText] = useState("");
   const [{ profiles, order, error }, setState] = useState(() => {
     try {
       const loaded = loadProfiles();
@@ -65,21 +67,24 @@ export default function Command() {
   }
 
   const sorted = sortByOrder(profiles, order);
+  const globalIndex = new Map(sorted.map((p, i) => [p.id, i + 1]));
+  const visible = filterProfiles(sorted, searchText);
 
   return (
     <List
+      filtering={false}
+      onSearchTextChange={setSearchText}
       navigationTitle="Reorder Ghostty Profiles"
       searchBarPlaceholder="Find a profile to move (clear search before bulk moves)"
     >
-      {sorted.map((profile, index) => (
+      {visible.map((profile) => (
         <List.Item
           key={profile.id}
           id={profile.id}
           icon={iconForType(profile.type)}
           title={profile.name}
           subtitle={subtitleFor(profile)}
-          accessories={[{ text: String(index + 1) }]}
-          keywords={[profile.name, ...profile.tags]}
+          accessories={[{ text: String(globalIndex.get(profile.id) ?? 0) }]}
           actions={
             <ActionPanel>
               <Action

@@ -12,7 +12,7 @@ import { execFile } from "node:child_process";
 import { existsSync } from "node:fs";
 import { loadProfiles, DEFAULT_PROFILES_PATH, ProfilesError } from "./profiles";
 import { buildAppleScript, LaunchTarget } from "./applescript";
-import { sortByOrder } from "./ordering";
+import { sortByOrder, filterProfiles } from "./ordering";
 import type { Profile } from "./types";
 
 export function iconForType(type: Profile["type"]) {
@@ -84,6 +84,7 @@ function makeActions(profile: Profile) {
 }
 
 export default function Command() {
+  const [searchText, setSearchText] = useState("");
   const [{ profiles, order, error }, setState] = useState(() => {
     try {
       const loaded = loadProfiles();
@@ -153,6 +154,8 @@ export default function Command() {
 
   return (
     <List
+      filtering={false}
+      onSearchTextChange={setSearchText}
       navigationTitle="Ghostty Profiles"
       searchBarPlaceholder="Search profiles by name, host, tag…"
       actions={
@@ -161,7 +164,7 @@ export default function Command() {
         </ActionPanel>
       }
     >
-      {sortByOrder(profiles, order).map((profile) => (
+      {filterProfiles(sortByOrder(profiles, order), searchText).map((profile) => (
         <List.Item
           key={profile.id}
           id={profile.id}
@@ -169,7 +172,6 @@ export default function Command() {
           title={profile.name}
           subtitle={subtitleFor(profile)}
           accessories={profile.tags.slice(0, 3).map((t) => ({ tag: t }))}
-          keywords={[profile.name, ...profile.tags, ...(profile.command ? [profile.command] : [])]}
           actions={makeActions(profile)}
         />
       ))}
