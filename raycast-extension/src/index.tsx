@@ -12,6 +12,7 @@ import { execFile } from "node:child_process";
 import { existsSync } from "node:fs";
 import { loadProfiles, DEFAULT_PROFILES_PATH, ProfilesError } from "./profiles";
 import { buildAppleScript, LaunchTarget } from "./applescript";
+import { sortByOrder } from "./ordering";
 import type { Profile } from "./types";
 
 function iconForType(type: Profile["type"]) {
@@ -83,12 +84,18 @@ function makeActions(profile: Profile) {
 }
 
 export default function Command() {
-  const [{ profiles, error }, setState] = useState(() => {
+  const [{ profiles, order, error }, setState] = useState(() => {
     try {
-      return { profiles: loadProfiles(), error: null as string | null };
+      const loaded = loadProfiles();
+      return {
+        profiles: loaded.profiles,
+        order: loaded.order,
+        error: null as string | null,
+      };
     } catch (err) {
       return {
         profiles: [] as Profile[],
+        order: [] as string[],
         error: err instanceof ProfilesError ? err.message : (err as Error).message,
       };
     }
@@ -96,10 +103,12 @@ export default function Command() {
 
   const refresh = useCallback(() => {
     try {
-      setState({ profiles: loadProfiles(), error: null });
+      const loaded = loadProfiles();
+      setState({ profiles: loaded.profiles, order: loaded.order, error: null });
     } catch (err) {
       setState({
         profiles: [],
+        order: [],
         error: err instanceof ProfilesError ? err.message : (err as Error).message,
       });
     }
@@ -152,7 +161,7 @@ export default function Command() {
         </ActionPanel>
       }
     >
-      {profiles.map((profile) => (
+      {sortByOrder(profiles, order).map((profile) => (
         <List.Item
           key={profile.id}
           id={profile.id}

@@ -14,7 +14,7 @@ afterEach(() => {
 });
 
 describe("loadProfiles", () => {
-  it("returns the profiles array when the JSON is valid", () => {
+  it("returns profiles and order when the JSON is valid", () => {
     const path = join(tmp, "profiles.json");
     writeFileSync(
       path,
@@ -22,6 +22,7 @@ describe("loadProfiles", () => {
         schema_version: 1,
         exported_at: "2026-07-05T00:00:00Z",
         source: "com.googlecode.iterm2",
+        order: ["nas", "other"],
         profiles: [
           {
             id: "nas",
@@ -36,9 +37,25 @@ describe("loadProfiles", () => {
         ],
       })
     );
-    const result = loadProfiles(path);
-    expect(result).toHaveLength(1);
-    expect(result[0].name).toBe("NAS");
+    const { profiles, order } = loadProfiles(path);
+    expect(profiles).toHaveLength(1);
+    expect(profiles[0].name).toBe("NAS");
+    expect(order).toEqual(["nas", "other"]);
+  });
+
+  it("returns empty order when the field is absent (backward compat)", () => {
+    const path = join(tmp, "legacy.json");
+    writeFileSync(
+      path,
+      JSON.stringify({
+        schema_version: 1,
+        exported_at: "2026-07-05T00:00:00Z",
+        source: "com.googlecode.iterm2",
+        profiles: [],
+      })
+    );
+    const { order } = loadProfiles(path);
+    expect(order).toEqual([]);
   });
 
   it("throws ProfilesError when the file is missing", () => {

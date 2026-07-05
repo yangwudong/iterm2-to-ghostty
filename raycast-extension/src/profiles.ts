@@ -12,8 +12,13 @@ export class ProfilesError extends Error {
 export const DEFAULT_PROFILES_PATH =
   process.env.HOME + "/.config/ghostty/profiles.json";
 
+export interface LoadedProfiles {
+  profiles: Profile[];
+  order: string[];
+}
+
 /** Load and validate profiles.json. Throws ProfilesError on any problem. */
-export function loadProfiles(path: string = DEFAULT_PROFILES_PATH): Profile[] {
+export function loadProfiles(path: string = DEFAULT_PROFILES_PATH): LoadedProfiles {
   let raw: string;
   try {
     raw = readFileSync(path, "utf-8");
@@ -43,5 +48,9 @@ export function loadProfiles(path: string = DEFAULT_PROFILES_PATH): Profile[] {
   if (!Array.isArray(doc.profiles)) {
     throw new ProfilesError("profiles.json has no profiles array.");
   }
-  return doc.profiles.filter((p) => p && !p.skip) as Profile[];
+  const order = Array.isArray(doc.order) ? doc.order.filter((x) => typeof x === "string") : [];
+  return {
+    profiles: doc.profiles.filter((p) => p && !p.skip) as Profile[],
+    order: order as string[],
+  };
 }

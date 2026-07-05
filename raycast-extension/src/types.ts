@@ -15,5 +15,6 @@ export interface ProfilesDocument {
   schema_version: number;
   exported_at: string;
   source: string;
+  order?: string[];
   profiles: Profile[];
 }
