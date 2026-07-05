@@ -46,3 +46,32 @@ export function buildAppleScript(profile: Profile, target: LaunchTarget): string
   lines.push("end tell");
   return lines.join("\n");
 }
+
+/**
+ * Build a Ghostty AppleScript that opens a login shell and runs the iTerm2
+ * export script, keeping the surface open so the user sees the result.
+ *
+ * Runs `/bin/zsh -lc "python3 '<scriptPath>' --export-profiles-json"` so the
+ * user's full login PATH is in effect (python3 resolves as in their terminal).
+ * `wait after command` keeps the tab open after the command exits.
+ */
+export function buildSyncAppleScript(scriptPath: string, target: LaunchTarget): string {
+  const shellCommand = `/bin/zsh -lc "python3 '${scriptPath}' --export-profiles-json"`;
+  const lines: string[] = [];
+  lines.push("tell application \"Ghostty\"");
+  lines.push("  set cfg to new surface configuration");
+  lines.push(`  set command of cfg to "${escapeAppleString(shellCommand)}"`);
+  lines.push("  set wait after command of cfg to true");
+  if (target === "window") {
+    lines.push("  set w to new window with configuration cfg");
+  } else {
+    lines.push("  if (count of windows) > 0 then");
+    lines.push("    set t to new tab with configuration cfg");
+    lines.push("  else");
+    lines.push("    set w to new window with configuration cfg");
+    lines.push("  end if");
+  }
+  lines.push("  activate");
+  lines.push("end tell");
+  return lines.join("\n");
+}

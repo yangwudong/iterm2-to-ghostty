@@ -14,7 +14,10 @@ declare type Preferences = ExtensionPreferences
 
 declare namespace Preferences {
   /** Preferences accessible in the `index` command */
-  export type Index = ExtensionPreferences & {}
+  export type Index = ExtensionPreferences & {
+  /** iterm2_to_ghostty.py - Path to the export script. Used by the *** Sync Profiles *** entry. */
+  "scriptPath"?: string
+}
   /** Preferences accessible in the `reorder` command */
   export type Reorder = ExtensionPreferences & {}
 }

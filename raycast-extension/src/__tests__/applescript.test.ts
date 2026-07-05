@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildAppleScript, escapeAppleString } from "../applescript";
+import { buildAppleScript, buildSyncAppleScript, escapeAppleString } from "../applescript";
 import type { Profile } from "../types";
 
 function p(over: Partial<Profile>): Profile {
@@ -60,5 +60,36 @@ describe("buildAppleScript", () => {
     expect(script).toContain("set w to new window with configuration cfg");
     // Must NOT create a new tab (that was the old buggy behavior).
     expect(script).not.toContain("new tab");
+  });
+});
+
+describe("buildSyncAppleScript", () => {
+  const SCRIPT = "/Users/jack/workspaces/iterm2-to-ghostty/iterm2_to_ghostty.py";
+
+  it("tab target: runs zsh -lc python3 in a new tab, keeps surface open", () => {
+    const script = buildSyncAppleScript(SCRIPT, "tab");
+    expect(script).toContain('set command of cfg to "/bin/zsh -lc \\"python3');
+    expect(script).toContain(`'${SCRIPT}'`);
+    expect(script).toContain("--export-profiles-json");
+    expect(script).toContain("set wait after command of cfg to true");
+    expect(script).toContain("set t to new tab with configuration cfg");
+    expect(script).toContain("set w to new window with configuration cfg");
+  });
+
+  it("window target: always new window, no tab", () => {
+    const script = buildSyncAppleScript(SCRIPT, "window");
+    expect(script).toContain("set w to new window with configuration cfg");
+    expect(script).not.toContain("new tab");
+  });
+
+  it("escapes a double-quote in the script path", () => {
+    const script = buildSyncAppleScript('/path/"weird".py', "tab");
+    // The inner double-quotes must be backslash-escaped in the AppleScript literal.
+    expect(script).toContain('\\"weird\\"');
+  });
+
+  it("single-quotes the path so spaces are tolerated", () => {
+    const script = buildSyncAppleScript("/path with spaces/script.py", "tab");
+    expect(script).toContain("'/path with spaces/script.py'");
   });
 });

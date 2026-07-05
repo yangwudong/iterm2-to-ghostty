@@ -7,13 +7,27 @@ import {
   List,
   showToast,
   Toast,
+  getPreferenceValues,
+  openCommandPreferences,
 } from "@raycast/api";
 import { execFile } from "node:child_process";
 import { existsSync } from "node:fs";
 import { loadProfiles, DEFAULT_PROFILES_PATH, ProfilesError } from "./profiles";
-import { buildAppleScript, LaunchTarget } from "./applescript";
+import { buildAppleScript, buildSyncAppleScript, LaunchTarget } from "./applescript";
 import { sortByOrder, filterProfiles } from "./ordering";
 import type { Profile } from "./types";
+
+const SYNC_ID = "__sync__";
+const SYNC_PSEUDO: Profile = {
+  id: SYNC_ID,
+  name: "*** Sync Profiles ***",
+  type: "command",
+  working_directory: null,
+  command: null,
+  tags: ["sync", "export", "iterm", "ghostty", "profiles"],
+  skip: false,
+  raw: {},
+};
 
 export function iconForType(type: Profile["type"]) {
   switch (type) {
@@ -83,6 +97,28 @@ function makeActions(profile: Profile) {
   );
 }
 
+/** Trigger the iTerm2 export by opening Ghostty and running the script in a login shell. */
+function syncNow(scriptPath: string) {
+  if (!scriptPath) {
+    showToast({
+      style: Toast.Style.Failure,
+      title: "No script path set",
+      message: "Set iterm2_to_ghostty.py in command preferences",
+    });
+    openCommandPreferences();
+    return;
+  }
+  runGhostty(buildSyncAppleScript(scriptPath, "tab"));
+}
+
+function makeSyncActions(scriptPath: string) {
+  return (
+    <ActionPanel>
+      <Action title="Sync Now" icon={Icon.ArrowClockwise} onAction={() => syncNow(scriptPath)} />
+    </ActionPanel>
+  );
+}
+
 export default function Command() {
   const [searchText, setSearchText] = useState("");
   const [{ profiles, order, error }, setState] = useState(() => {
@@ -116,6 +152,8 @@ export default function Command() {
   }, []);
 
   const fileExists = existsSync(DEFAULT_PROFILES_PATH);
+  const scriptPath = (getPreferenceValues() as { scriptPath?: string }).scriptPath ?? "";
+  const syncVisible = filterProfiles([SYNC_PSEUDO], searchText).length > 0;
 
   if (error) {
     return (
@@ -175,6 +213,16 @@ export default function Command() {
           actions={makeActions(profile)}
         />
       ))}
+      {syncVisible ? (
+        <List.Item
+          key={SYNC_ID}
+          id={SYNC_ID}
+          icon={Icon.ArrowClockwise}
+          title={SYNC_PSEUDO.name}
+          subtitle="Re-export from iTerm2"
+          actions={makeSyncActions(scriptPath)}
+        />
+      ) : null}
     </List>
   );
 }

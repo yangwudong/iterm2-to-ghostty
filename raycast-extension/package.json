@@ -13,7 +13,16 @@
       "title": "Search Ghostty Profiles",
       "description": "Search exported profiles and open them in Ghostty.",
       "mode": "view",
-      "keywords": ["iterm", "ghostty", "terminal", "ssh"]
+      "keywords": ["iterm", "ghostty", "terminal", "ssh"],
+      "preferences": [
+        {
+          "name": "scriptPath",
+          "title": "iterm2_to_ghostty.py",
+          "description": "Path to the export script. Used by the *** Sync Profiles *** entry.",
+          "type": "file",
+          "required": false
+        }
+      ]
     },
     {
       "name": "reorder",
