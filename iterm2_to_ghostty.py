@@ -272,6 +272,16 @@ def select_profile(
     return profiles[0]
 
 
+def slugify_id(name: str) -> str:
+    """Derive a stable, URL-safe id slug from an iTerm2 profile name.
+
+    Lowercases, replaces runs of non-alphanumeric characters with a single dash,
+    and strips leading/trailing dashes. Non-ASCII characters are dropped.
+    """
+    cleaned = re.sub(r"[^0-9a-zA-Z]+", "-", str(name)).strip("-").lower()
+    return cleaned or "profile"
+
+
 def escape_value(value: Any) -> str:
     s = str(value)
     if not s:
