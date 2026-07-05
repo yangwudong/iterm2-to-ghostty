@@ -72,10 +72,10 @@ function makeActions(profile: Profile) {
         />
       ) : null}
       {profile.working_directory ? (
-        <Action.Open
+        <Action.ShowInFinder
           title="Reveal Working Directory"
           icon={Icon.Folder}
-          target={profile.working_directory}
+          path={profile.working_directory}
         />
       ) : null}
     </ActionPanel>
@@ -83,30 +83,37 @@ function makeActions(profile: Profile) {
 }
 
 export default function Command() {
-  const [version, setVersion] = useState(0);
-  const refresh = useCallback(() => setVersion((v) => v + 1), []);
+  const [{ profiles, error }, setState] = useState(() => {
+    try {
+      return { profiles: loadProfiles(), error: null as string | null };
+    } catch (err) {
+      return {
+        profiles: [] as Profile[],
+        error: err instanceof ProfilesError ? err.message : (err as Error).message,
+      };
+    }
+  });
 
-  let profiles: Profile[] = [];
-  let loadError: string | null = null;
+  const refresh = useCallback(() => {
+    try {
+      setState({ profiles: loadProfiles(), error: null });
+    } catch (err) {
+      setState({
+        profiles: [],
+        error: err instanceof ProfilesError ? err.message : (err as Error).message,
+      });
+    }
+  }, []);
+
   const fileExists = existsSync(DEFAULT_PROFILES_PATH);
 
-  try {
-    profiles = loadProfiles();
-  } catch (err) {
-    if (err instanceof ProfilesError) {
-      loadError = err.message;
-    } else {
-      loadError = (err as Error).message;
-    }
-  }
-
-  if (loadError) {
+  if (error) {
     return (
       <List>
         <List.Item
           icon={Icon.ExclamationMark}
           title="No profiles loaded"
-          subtitle={loadError}
+          subtitle={error}
           accessories={fileExists ? [] : [{ text: "run the export script" }]}
           actions={
             <ActionPanel>
@@ -137,7 +144,6 @@ export default function Command() {
 
   return (
     <List
-      key={version}
       navigationTitle="iTerm Profiles"
       searchBarPlaceholder="Search profiles by name, host, tag…"
       actions={
@@ -154,7 +160,7 @@ export default function Command() {
           title={profile.name}
           subtitle={subtitleFor(profile)}
           accessories={profile.tags.slice(0, 3).map((t) => ({ tag: t }))}
-          keywords={[profile.name, ...profile.tags, profile.command || ""]}
+          keywords={[profile.name, ...profile.tags, ...(profile.command ? [profile.command] : [])]}
           actions={makeActions(profile)}
         />
       ))}
