@@ -19,6 +19,7 @@ import shutil
 import subprocess
 import sys
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -472,8 +473,6 @@ def build_profiles_document(
     prefs: dict[str, Any], dynamic_dir: Path | None
 ) -> dict[str, Any]:
     """Build the full profiles.json document from iTerm2 preferences (spec §3)."""
-    from datetime import datetime, timezone
-
     bookmarks = all_profiles(prefs, dynamic_dir)
     normalized = [normalize_profile(b) for b in bookmarks if isinstance(b, dict)]
     # Keep skipped profiles OUT of the document entirely (cleaner for the UI).
@@ -1093,7 +1092,7 @@ def main(argv: list[str]) -> int:
         if args.dry_run:
             sys.stdout.write(payload)
         else:
-            output_path: Path = args.export_profiles_json
+            output_path = args.export_profiles_json
             output_path.parent.mkdir(parents=True, exist_ok=True)
             output_path.write_text(payload, encoding="utf-8")
             print(f"Wrote {len(document['profiles'])} profiles to {output_path}")

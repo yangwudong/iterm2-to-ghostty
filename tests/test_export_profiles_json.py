@@ -4,7 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from iterm2_to_ghostty import slugify_id, detect_type
+from iterm2_to_ghostty import slugify_id, detect_type, build_profiles_document
 
 
 class SlugifyTests(unittest.TestCase):
@@ -216,10 +216,6 @@ class NormalizeProfileTests(unittest.TestCase):
         self.assertEqual(result["command"], "docker compose up")
         self.assertEqual(result["working_directory"], "/Users/jack/work/build")
 
-
-import json
-import tempfile
-from iterm2_to_ghostty import build_profiles_document
 
 
 class BuildProfilesDocumentTests(unittest.TestCase):
