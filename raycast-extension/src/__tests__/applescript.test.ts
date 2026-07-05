@@ -92,4 +92,13 @@ describe("buildSyncAppleScript", () => {
     const script = buildSyncAppleScript("/path with spaces/script.py", "tab");
     expect(script).toContain("'/path with spaces/script.py'");
   });
+
+  it("shell-escapes a single-quote in the path (no breakout from the quoting)", () => {
+    const script = buildSyncAppleScript("/path/to/it's.py", "tab");
+    // The raw unescaped quote must NOT appear mid-path (it would close the
+    // single-quoted segment and let the rest be interpreted by the shell).
+    expect(script).not.toMatch(/it's\.py/);
+    // The path tail is still present (escaping didn't drop it).
+    expect(script).toContain("s.py");
+  });
 });

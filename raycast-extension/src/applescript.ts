@@ -56,7 +56,10 @@ export function buildAppleScript(profile: Profile, target: LaunchTarget): string
  * `wait after command` keeps the tab open after the command exits.
  */
 export function buildSyncAppleScript(scriptPath: string, target: LaunchTarget): string {
-  const shellCommand = `/bin/zsh -lc "python3 '${scriptPath}' --export-profiles-json"`;
+  // Shell-single-quote the path so spaces AND single-quotes are safe (a raw `'`
+  // in the path would otherwise break out of the surrounding '...').
+  const shSq = (s: string) => `'${s.replace(/'/g, "'\\''")}'`;
+  const shellCommand = `/bin/zsh -lc "python3 ${shSq(scriptPath)} --export-profiles-json"`;
   const lines: string[] = [];
   lines.push("tell application \"Ghostty\"");
   lines.push("  set cfg to new surface configuration");
