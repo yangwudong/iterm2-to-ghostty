@@ -30,11 +30,11 @@ export function buildAppleScript(profile: Profile, target: LaunchTarget): string
     lines.push("  set w to new window with configuration cfg");
   } else if (target === "split") {
     lines.push("  if (count of windows) > 0 then");
-    lines.push("    set t to new tab with configuration cfg");
+    lines.push("    set t to terminal 1 of selected tab of window 1");
+    lines.push("    split t direction right with configuration cfg");
     lines.push("  else");
     lines.push("    set w to new window with configuration cfg");
     lines.push("  end if");
-    lines.push("  split t direction right with configuration cfg");
   } else {
     lines.push("  if (count of windows) > 0 then");
     lines.push("    set t to new tab with configuration cfg");

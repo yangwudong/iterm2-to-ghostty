@@ -53,9 +53,12 @@ describe("buildAppleScript", () => {
     expect(script).toContain('set command of cfg to "ssh jack@host -t \\"tmux a\\""');
   });
 
-  it("split target creates a tab then splits right", () => {
+  it("split target splits the active terminal right, with new-window fallback", () => {
     const script = buildAppleScript(p({ type: "shell", working_directory: "/x" }), "split");
-    expect(script).toContain("set t to new tab with configuration cfg");
+    expect(script).toContain("set t to terminal 1 of selected tab of window 1");
     expect(script).toContain("split t direction right with configuration cfg");
+    expect(script).toContain("set w to new window with configuration cfg");
+    // Must NOT create a new tab (that was the old buggy behavior).
+    expect(script).not.toContain("new tab");
   });
 });
