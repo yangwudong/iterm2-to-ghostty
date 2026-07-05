@@ -102,6 +102,12 @@ class SshTokensTests(unittest.TestCase):
     def test_empty_when_not_ssh(self):
         self.assertEqual(ssh_tokens("docker compose up"), [])
 
+    def test_skips_port_flag_value(self):
+        self.assertEqual(
+            ssh_tokens("ssh -p 2222 jack@host.example.com"),
+            ["jack", "host", "example", "com"],
+        )
+
 
 class PathSegmentsTests(unittest.TestCase):
     def test_drops_username_and_users(self):

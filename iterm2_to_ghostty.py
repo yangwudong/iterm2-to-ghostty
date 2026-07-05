@@ -338,6 +338,10 @@ COMMAND_STOPWORDS = {
     "cd", "sudo", "and", "&&", "||", "|", ";", "echo", "exec", "source",
     ".", "~", "../", "./", "bash", "sh", "zsh",
 }
+SSH_VALUE_FLAGS = {
+    "-p", "-i", "-F", "-o", "-c", "-l", "-m", "-O", "-S", "-W",
+    "-b", "-D", "-L", "-R", "-e", "-w",
+}
 
 
 def name_tokens(name: str) -> list[str]:
@@ -360,10 +364,17 @@ def prefix_bucket(name: str) -> str:
 def ssh_tokens(command: str) -> list[str]:
     """Extract user, hostname, and domain segments from an ssh command."""
     tokens = str(command).split()
-    if not tokens or tokens[0].lower() not in ("ssh",) and not tokens[0].endswith("/ssh"):
+    if not tokens or (tokens[0].lower() != "ssh" and not tokens[0].endswith("/ssh")):
         return []
     target = ""
+    skip_next = False
     for tok in tokens[1:]:
+        if skip_next:
+            skip_next = False
+            continue
+        if tok in SSH_VALUE_FLAGS:
+            skip_next = True
+            continue
         if tok.startswith("-"):
             continue
         target = tok
