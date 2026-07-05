@@ -28,9 +28,10 @@ export default function Command() {
   const [{ profiles, order, error }, setState] = useState(() => {
     try {
       const loaded = loadProfiles();
+      const order = loaded.order.length > 0 ? loaded.order : resetOrder(loaded.profiles);
       return {
         profiles: loaded.profiles,
-        order: loaded.order,
+        order,
         error: null as string | null,
       };
     } catch (err) {
