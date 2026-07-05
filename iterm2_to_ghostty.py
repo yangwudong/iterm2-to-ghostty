@@ -282,6 +282,37 @@ def slugify_id(name: str) -> str:
     return cleaned or "profile"
 
 
+def detect_type(bookmark: dict[str, Any]) -> str:
+    """Classify a bookmark as 'ssh', 'command', or 'shell'.
+
+    Rules (see spec §3):
+      1. Command's first token is `ssh` or ends with `/ssh` -> 'ssh'.
+      2. Custom Command in {Yes, Custom} and a non-shell command is set -> 'command'.
+      3. Otherwise -> 'shell' (plain interactive shell, possibly in a cwd).
+    """
+    raw_cmd = str(bookmark.get("Command", "") or "").strip()
+    custom = str(bookmark.get("Custom Command", "No"))
+    tokens = raw_cmd.split()
+    if tokens:
+        first = tokens[0].lower()
+        if first == "ssh" or first.endswith("/ssh"):
+            return "ssh"
+    if custom in ("Yes", "Custom") and raw_cmd:
+        first = tokens[0].lower()
+        if first not in ("ssh",) and not first.endswith("/ssh"):
+            if not _looks_like_login_shell(first):
+                return "command"
+    return "shell"
+
+
+def _looks_like_login_shell(first_token: str) -> bool:
+    """Heuristic: treat common shell/login program basenames as 'shell'."""
+    basenames = {"zsh", "bash", "sh", "fish", "login", "cd"}
+    return first_token in basenames or any(
+        first_token.endswith(f"/{b}") for b in basenames
+    )
+
+
 def escape_value(value: Any) -> str:
     s = str(value)
     if not s:
