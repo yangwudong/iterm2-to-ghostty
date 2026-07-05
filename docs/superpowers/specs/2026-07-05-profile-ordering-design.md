@@ -71,12 +71,12 @@ This makes the view fully determined by `order` + the profiles set. When `order`
 Before overwriting `profiles.json`, the export reads the existing file's `order` (if any) and computes the new `order`:
 
 1. `kept` = ids from existing `order` that are still present in the new `profiles` set (preserves the user's custom sequence; drops renamed/deleted profiles).
-2. `added` = ids in the new `profiles` set that are NOT in existing `order`, sorted alphabetically by **name** (stable; new profiles land at the bottom; matches the display fallback in §4.1).
+2. `added` = ids in the new `profiles` set that are NOT in existing `order`, in **iTerm2 New Bookmarks traversal order** (the order profiles appear in iTerm2's profile list — preserved by `all_profiles` and captured before the `profiles` array is id-sorted for stable output).
 3. New `order` = `kept + added`.
 
-On first export (no existing file / no existing `order`): `order` = all new profile ids, alphabetical by **name**.
+On first export (no existing file / no existing `order`): `order` = all profile ids in **iTerm2 New Bookmarks order**.
 
-This guarantees: re-exporting preserves customization, removed profiles vanish from the order, and newly-added profiles append to the end in a predictable position.
+This guarantees: re-exporting preserves customization, removed profiles vanish from the order, and newly-added profiles land at the bottom in the same relative order iTerm2 shows them.
 
 ## 5. Export-script changes (`iterm2_to_ghostty.py`)
 

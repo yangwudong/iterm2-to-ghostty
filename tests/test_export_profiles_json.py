@@ -258,10 +258,10 @@ class OrderMergeTests(unittest.TestCase):
         ]}
         return build_profiles_document(prefs, None, existing_order)
 
-    def test_first_export_order_is_alphabetical_by_name(self):
+    def test_first_export_order_follows_iterm2_bookmarks_order(self):
+        # Plist order is Zeta, Alpha, Mi — NOT alphabetical (which would be Alpha, Mi, Zeta).
         doc = self._doc([("Zeta", "ssh a@z"), ("Alpha", "ssh a@alpha"), ("Mi", "ssh a@mi")])
-        # order lists ids; ids are slugified names; sorted by NAME not id.
-        self.assertEqual(doc["order"], ["alpha", "mi", "zeta"])
+        self.assertEqual(doc["order"], ["zeta", "alpha", "mi"])
 
     def test_reexport_preserves_existing_order_for_kept_ids(self):
         doc = self._doc(
@@ -278,19 +278,25 @@ class OrderMergeTests(unittest.TestCase):
         )
         self.assertEqual(doc["order"], ["zeta", "alpha"])
 
-    def test_reexport_appends_new_ids_alphabetically_by_name(self):
+    def test_reexport_appends_new_ids_in_iterm2_order(self):
+        # Plist order: Zeta, Gamma, Alpha, Beta. Existing has Zeta, Alpha.
+        # New ids are Gamma, Beta — they should append in PLIST order (Gamma before Beta),
+        # NOT alphabetical (which would be Beta before Gamma).
         doc = self._doc(
-            [("Alpha", "ssh a@alpha"), ("Beta", "ssh a@beta"), ("Zeta", "ssh a@z")],
-            existing_order=["zeta", "alpha"],  # Beta is new
+            [("Zeta", "ssh a@z"), ("Gamma", "ssh a@g"), ("Alpha", "ssh a@alpha"), ("Beta", "ssh a@b")],
+            existing_order=["zeta", "alpha"],
         )
-        self.assertEqual(doc["order"], ["zeta", "alpha", "beta"])
+        self.assertEqual(doc["order"], ["zeta", "alpha", "gamma", "beta"])
 
     def test_combined_stale_and_new(self):
+        # Plist: Alpha, Gamma, Zeta, Beta. Existing: zeta, ghost(stale), alpha.
+        # kept = [zeta, alpha]; added = new ids in plist order = [gamma, beta].
+        # (Alphabetical would put beta before gamma — this asserts plist order wins.)
         doc = self._doc(
-            [("Alpha", "ssh a@alpha"), ("Beta", "ssh a@beta"), ("Zeta", "ssh a@z")],
-            existing_order=["zeta", "ghost", "alpha"],  # ghost stale; beta new
+            [("Alpha", "ssh a@alpha"), ("Gamma", "ssh a@g"), ("Zeta", "ssh a@z"), ("Beta", "ssh a@b")],
+            existing_order=["zeta", "ghost", "alpha"],
         )
-        self.assertEqual(doc["order"], ["zeta", "alpha", "beta"])
+        self.assertEqual(doc["order"], ["zeta", "alpha", "gamma", "beta"])
 
     def test_existing_order_none_matches_first_export(self):
         doc_none = self._doc([("Zeta", "ssh a@z"), ("Alpha", "ssh a@alpha")], existing_order=None)

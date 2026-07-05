@@ -479,19 +479,22 @@ def build_profiles_document(
     normalized = [normalize_profile(b) for b in bookmarks if isinstance(b, dict)]
     # Keep skipped profiles OUT of the document entirely (cleaner for the UI).
     normalized = [p for p in normalized if not p.get("skip")]
+
+    # iTerm2's natural profile order (New Bookmarks traversal order), captured
+    # before the id-sort below reorders `profiles` for stable output. Used for
+    # the initial `order` and for where newly-added profiles slot in on re-export.
+    natural_order = [p["id"] for p in normalized]
+
     normalized.sort(key=lambda p: p["id"])
 
-    name_by_id = {p["id"]: p["name"] for p in normalized}
+    present_ids = {p["id"] for p in normalized}
     if existing_order:
         existing_set = set(existing_order)
-        kept = [i for i in existing_order if i in name_by_id]  # drop stale/renamed ids
-        added = sorted(
-            (i for i in name_by_id if i not in existing_set),
-            key=lambda i: name_by_id[i],
-        )
+        kept = [i for i in existing_order if i in present_ids]  # drop stale/renamed ids
+        added = [i for i in natural_order if i not in existing_set]  # new ids in iTerm2 order
         order = kept + added
     else:
-        order = sorted(name_by_id.keys(), key=lambda i: name_by_id[i])
+        order = natural_order  # first export: iTerm2 bookmarks order
 
     return {
         "schema_version": 1,
