@@ -26,7 +26,11 @@ describe("buildAppleScript", () => {
   it("ssh in a new tab uses command of cfg", () => {
     const script = buildAppleScript(p({ type: "ssh", command: "ssh jack@host" }), "tab");
     expect(script).toContain('set command of cfg to "ssh jack@host"');
-    expect(script).toContain("set t to new tab with configuration cfg");
+    // 'in window 1' is REQUIRED: a bare 'new tab' sent to the application errors
+    // with -1708 "Can't continue new tab" (Ghostty still creates the tab as a
+    // side effect, so it looks like it works, but osascript exits non-zero and
+    // Raycast keeps the dialog open). Targeting window 1 exits cleanly.
+    expect(script).toContain("set t to new tab with configuration cfg in window 1");
     expect(script).toContain("set w to new window with configuration cfg");
   });
 

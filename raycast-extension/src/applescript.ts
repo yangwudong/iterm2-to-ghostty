@@ -37,7 +37,7 @@ export function buildAppleScript(profile: Profile, target: LaunchTarget): string
     lines.push("  end if");
   } else {
     lines.push("  if (count of windows) > 0 then");
-    lines.push("    set t to new tab with configuration cfg");
+    lines.push("    set t to new tab with configuration cfg in window 1");
     lines.push("  else");
     lines.push("    set w to new window with configuration cfg");
     lines.push("  end if");
@@ -69,7 +69,7 @@ export function buildSyncAppleScript(scriptPath: string, target: LaunchTarget): 
     lines.push("  set w to new window with configuration cfg");
   } else {
     lines.push("  if (count of windows) > 0 then");
-    lines.push("    set t to new tab with configuration cfg");
+    lines.push("    set t to new tab with configuration cfg in window 1");
     lines.push("  else");
     lines.push("    set w to new window with configuration cfg");
     lines.push("  end if");
