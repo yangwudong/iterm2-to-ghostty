@@ -9,6 +9,7 @@ import {
   Toast,
   getPreferenceValues,
   openCommandPreferences,
+  closeMainWindow,
 } from "@raycast/api";
 import { execFile } from "node:child_process";
 import { existsSync } from "node:fs";
@@ -57,6 +58,10 @@ function runGhostty(script: string) {
       });
     }
   });
+  // Dismiss the Raycast window so the launched Ghostty surface is what the user
+  // sees. Without this, the List stays open (Raycast only auto-hides on a
+  // focus change, which a new-tab in an already-running Ghostty doesn't trigger).
+  void closeMainWindow({ clearRootSearch: true });
 }
 
 function makeActions(profile: Profile) {
