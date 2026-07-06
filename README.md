@@ -44,8 +44,21 @@ copy first. Use `--no-backup` if you do not want that.
 --dry-run                   print the result instead of writing files
 --iterm-keybinding-conventions
                             add extra iTerm2/macOS-style tab and split shortcuts
+--export-profiles-json [PATH]
+                            export ALL iTerm2 profiles to a normalized JSON
+                            file (default ~/.config/ghostty/profiles.json) for
+                            the Raycast extension; preserves any existing custom
+                            `order` across re-exports
 --no-backup                 skip the config.bak backup
 ```
+
+## Raycast Extension
+
+A companion Raycast extension lives under [`raycast-extension/`](raycast-extension/README.md).
+It turns the exported profiles into a searchable Ghostty launcher — search &
+open profiles, set a custom order, and re-sync from iTerm2, all from Raycast.
+See **[raycast-extension/README.md](raycast-extension/README.md)** for the
+installation guide and daily usage.
 
 ## Tests
 
