@@ -10,7 +10,7 @@
   "commands": [
     {
       "name": "index",
-      "title": "Search Ghostty Profiles",
+      "title": "Ghostty Profiles",
       "description": "Search exported profiles and open them in Ghostty.",
       "mode": "view",
       "keywords": ["iterm", "ghostty", "terminal", "ssh"],
